@@ -135,7 +135,7 @@ echo "<strong>Age as of October 31:</strong> <small>$age years old</small><br>";
   </button>
     </div>
     <div class="col-12 col-md-6 d-flex">
-    <form action="/schoolsystem/users/delete" method="POST" style="display:inline;">
+    <form action="/BlissES/users/delete" method="POST" style="display:inline;">
     <input type="hidden" name="user_id" value="<?php echo $data['user_id']; ?>">
     <input type="hidden" name="paths" value="students-list">
     <button type="submit" class="btn btn-block btn-outline-danger btn-xs flex-fill">Delete</button>
@@ -164,7 +164,7 @@ echo "<strong>Age as of October 31:</strong> <small>$age years old</small><br>";
       </div>
       <div class="modal-body">
         <!-- Form to update teacher details -->
-        <form id="updateTeacherForm" method="POST" action="/schoolsystem/users/update">
+        <form id="updateTeacherForm" method="POST" action="/BlissES/users/update">
           <input type="hidden" name="user_id" id="teacherUserId">
           <input type="hidden" name="role_id" id="userrole">
           <div class="card card-dark card-outline card-tabs">

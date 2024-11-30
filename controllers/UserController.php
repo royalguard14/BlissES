@@ -47,7 +47,7 @@ class UserController extends BaseController {
 
 
             if ($stmt->execute()) {
-                header("Location: /schoolsystem/accounts");
+                header("Location: /BlissES/accounts");
                 exit();
             } else {
                 echo "Error: Could not create user.";
@@ -63,7 +63,7 @@ class UserController extends BaseController {
             $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
-                header("Location: /schoolsystem/accounts");
+                header("Location: /BlissES/accounts");
                 exit();
             } else {
                 echo "Error: Could not delete user.";
@@ -101,7 +101,7 @@ class UserController extends BaseController {
                 }
                 
                 // Redirect back to the user list
-                header("Location: /schoolsystem/accounts");
+                header("Location: /BlissES/accounts");
                 exit();
             } else {
                 echo "Error: Could not update user.";

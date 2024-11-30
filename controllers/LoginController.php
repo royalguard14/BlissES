@@ -11,7 +11,7 @@ class LoginController {
     public function showLoginForm() {
         if (isset($_SESSION['log_in'])) {
             // Redirect to login if not logged in
-            header('Location: /schoolsystem/dashboard');
+            header('Location: /BlissES/dashboard');
             exit();
         }
 
@@ -41,16 +41,16 @@ public function handleLogin() {
             $_SESSION['role_id'] = $user['role_id'];
             $_SESSION['last_activity'] = time();  // Set last activity time
 
-            header('Location: /schoolsystem/dashboard');
+            header('Location: /BlissES/dashboard');
             exit();
         } else {
             $_SESSION['login_error'] = "Invalid login credentials.";
-            header('Location: /schoolsystem/login');
+            header('Location: /BlissES/login');
             exit();
         }
     } else {
         $_SESSION['login_error'] = "Please enter both username and password.";
-        header('Location: /schoolsystem/login');
+        header('Location: /BlissES/login');
         exit();
     }
 }
@@ -64,7 +64,7 @@ public function handleLogout() {
     session_destroy();
     
     // Redirect to login page
-    header('Location: /schoolsystem/login');
+    header('Location: /BlissES/login');
     exit();
 }
 }

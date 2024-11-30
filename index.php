@@ -15,10 +15,10 @@ foreach (glob("controllers/*.php") as $filename) {
 
 
 // Capture the requested URL path (remove the base URL and any query string)
-$baseUrl = 'schoolsystem';
+$baseUrl = 'BlissES';
 $requestPath = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
 
-// Adjust the URL to handle the base URL (schoolsystem)
+// Adjust the URL to handle the base URL (BlissES)
 $requestPath = str_replace($baseUrl . '/', '', $requestPath);
 
 // Define routes
@@ -89,6 +89,14 @@ $routes = [
     'learners-storage' => ['controller' => 'StudentAccessController', 'action' => 'storage'],
     'updateuserpass' => ['controller' => 'StudentAccessController', 'action' => 'updateuserpass'],
     'uploadprofile' => ['controller' => 'StudentAccessController', 'action' => 'uploadprofile'],
+    'uploadDocs' => ['controller' => 'StudentAccessController', 'action' => 'uploadDocs'],
+    'deleteFile' => ['controller' => 'StudentAccessController', 'action' => 'deleteFile'],
+     'parents-list' => ['controller' => 'RegistrarMngtController', 'action' => 'showsParentList'],
+     'parents-add' => ['controller' => 'RegistrarMngtController', 'action' => 'addParentList'],
+     'parents-fetch' => ['controller' => 'RegistrarMngtController', 'action' => 'fetchParentList'],
+     'parents-update' => ['controller' => 'RegistrarMngtController', 'action' => 'updateParentList'],
+     'parents-family' => ['controller' => 'RegistrarMngtController', 'action' => 'familyParentList'],
+
     
     
 
@@ -96,7 +104,7 @@ $routes = [
 
 // Check if the user is logged in before allowing access to other pages
 if (!isset($_SESSION['log_in']) && $requestPath !== 'login' && $requestPath !== 'login/submit' && $requestPath !== 'logout') {
-    header('Location: /schoolsystem/login');
+    header('Location: /BlissES/login');
     exit();
 }
 

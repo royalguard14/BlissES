@@ -48,7 +48,7 @@ public function updateCampusInfo() {
             // Validate the input
             if (empty($function)) {
                 $_SESSION['error'] = "Error: All fields must be filled in.";
-                header("Location: /schoolsystem/campus-profile");
+                header("Location: /BlissES/campus-profile");
                 exit();
             }
 
@@ -60,18 +60,18 @@ public function updateCampusInfo() {
 
                 if (!$stmt->execute()) {
                     $_SESSION['error'] = "Error: Could not update campus info.";
-                    header("Location: /schoolsystem/campus-profile");
+                    header("Location: /BlissES/campus-profile");
                     exit();
                 }
             } catch (PDOException $e) {
                 $_SESSION['error'] = "Error: " . $e->getMessage();
-                header("Location: /schoolsystem/campus-profile");
+                header("Location: /BlissES/campus-profile");
                 exit();
             }
         }
 
         $_SESSION['success'] = "Campus info updated successfully!";
-        header("Location: /schoolsystem/campus-profile");
+        header("Location: /BlissES/campus-profile");
         exit();
     }
 }
@@ -87,7 +87,7 @@ public function addCampusSchoolYear() {
         // Validate input
         if (!$startYear || !$endYear || $startYear >= $endYear) {
             $_SESSION['error'] = "Error: Invalid school year range.";
-            header("Location: /schoolsystem/campus-profile");
+            header("Location: /BlissES/campus-profile");
             exit();
         }
 
@@ -100,7 +100,7 @@ public function addCampusSchoolYear() {
 
             if ($count > 0) {
                 $_SESSION['error'] = "Error: Start year already exists.";
-                header("Location: /schoolsystem/campus-profile");
+                header("Location: /BlissES/campus-profile");
                 exit();
             }
 
@@ -110,7 +110,7 @@ public function addCampusSchoolYear() {
             $stmt->bindParam(':end', $endYear, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
-                header("Location: /schoolsystem/campus-profile");
+                header("Location: /BlissES/campus-profile");
                 exit();
             } else {
                 $_SESSION['error'] = "Error: Could not add school year.";
@@ -120,7 +120,7 @@ public function addCampusSchoolYear() {
         }
 
         // Redirect back with error
-        header("Location: /schoolsystem/campus-profile");
+        header("Location: /BlissES/campus-profile");
         exit();
     }
 }
@@ -143,7 +143,7 @@ public function deleteCampusSchoolYear() {
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
         if ($stmt->execute()) {
-            header("Location: /schoolsystem/campus-profile");
+            header("Location: /BlissES/campus-profile");
             exit();
         } else {
             echo "Error: Could not delete school year.";
@@ -171,7 +171,7 @@ public function createCampusGrade() {
         $stmt = $this->db->prepare("INSERT INTO grade_level (level) VALUES (:level)");
         $stmt->bindParam(':level', $level, PDO::PARAM_STR);
         if ($stmt->execute()) {
-            header("Location: /schoolsystem/campus-grades");
+            header("Location: /BlissES/campus-grades");
             exit();
         } else {
             echo "Error: Could not create role.";
@@ -186,7 +186,7 @@ public function updateCampusGrade() {
         $stmt->bindParam(':grade_name', $grade_name, PDO::PARAM_STR);
         $stmt->bindParam(':grade_id', $grade_id, PDO::PARAM_INT);
         if ($stmt->execute()) {
-            header("Location: /schoolsystem/campus-grades"); 
+            header("Location: /BlissES/campus-grades"); 
             exit();
         } else {
             echo "Error: Could not update role.";
@@ -199,7 +199,7 @@ public function deleteCampusGrade() {
         $stmt = $this->db->prepare("DELETE FROM grade_level WHERE id = :grade_id");
         $stmt->bindParam(':grade_id', $grade_id, PDO::PARAM_INT);
         if ($stmt->execute()) {
-            header("Location: /schoolsystem/campus-grades");
+            header("Location: /BlissES/campus-grades");
             exit();
         } else {
             echo "Error: Could not delete role.";
@@ -248,7 +248,7 @@ public function createCampusSection() {
         $stmt->bindParam(':section_name', $section_name, PDO::PARAM_STR);
         $stmt->bindParam(':daytime', $section_session, PDO::PARAM_STR);
         if ($stmt->execute()) {
-            header("Location: /schoolsystem/campus-sections");
+            header("Location: /BlissES/campus-sections");
             exit();
         } else {
             echo "Error: Could not create role.";
@@ -261,7 +261,7 @@ public function deleteCampusSection() {
         $stmt = $this->db->prepare("DELETE FROM sections WHERE id = :section_id");
         $stmt->bindParam(':section_id', $section_id, PDO::PARAM_INT);
         if ($stmt->execute()) {
-           header("Location: /schoolsystem/campus-sections");
+           header("Location: /BlissES/campus-sections");
            exit();
        } else {
         echo "Error: Could not delete role.";
@@ -278,7 +278,7 @@ public function updateCampusSection() {
         $stmt->bindParam(':section_session', $section_session, PDO::PARAM_STR);
         $stmt->bindParam(':sec_id', $sec_id, PDO::PARAM_INT);
         if ($stmt->execute()) {
-           header("Location: /schoolsystem/campus-sections");
+           header("Location: /BlissES/campus-sections");
            exit();
        } else {
         echo "Error: Could not update role.";
@@ -295,7 +295,7 @@ public function updateAdviser() {
             $stmt->bindParam(':adviser_id', $adviserId, PDO::PARAM_INT);
             $stmt->bindParam(':section_id', $sectionId, PDO::PARAM_INT);
             if ($stmt->execute()) {
-                header("Location: /schoolsystem/campus-sections");
+                header("Location: /BlissES/campus-sections");
                 exit();
             } else {
                 $_SESSION['error'] = "Error: Could not update adviser.";
@@ -307,7 +307,7 @@ public function updateAdviser() {
                 $_SESSION['error'] = "Error: " . $e->getMessage();
             }
         }
-        header("Location: /schoolsystem/campus-sections");
+        header("Location: /BlissES/campus-sections");
         exit();
     }
 }
@@ -335,7 +335,7 @@ public function createCampusSubject() {
         $stmt->bindParam(':name', $sub_name, PDO::PARAM_STR);
         $stmt->bindParam(':description', $sub_desc, PDO::PARAM_STR);
         if ($stmt->execute()) {
-            header("Location: /schoolsystem/campus-subjects");
+            header("Location: /BlissES/campus-subjects");
             exit();
         } else {
             echo "Error: Could not create role.";
@@ -348,7 +348,7 @@ public function deleteCampusSubject() {
         $stmt = $this->db->prepare("DELETE FROM subjects WHERE id = :sub_id");
         $stmt->bindParam(':sub_id', $sub_id, PDO::PARAM_INT);
         if ($stmt->execute()) {
-           header("Location: /schoolsystem/campus-subjects");
+           header("Location: /BlissES/campus-subjects");
            exit();
        } else {
         echo "Error: Could not delete role.";
@@ -366,7 +366,7 @@ public function updateCampusSubject() {
         $stmt->bindParam(':description', $sub_desc, PDO::PARAM_STR);
         $stmt->bindParam(':sub_id', $sub_id, PDO::PARAM_INT);
         if ($stmt->execute()) {
-           header("Location: /schoolsystem/campus-subjects");
+           header("Location: /BlissES/campus-subjects");
            exit();
        } else {
         echo "Error: Could not update role.";

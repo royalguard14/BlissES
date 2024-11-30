@@ -120,6 +120,12 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
         <p>Learner's</p>
       </a>
     </li>
+      <li class="nav-item">
+      <a href="parents-list" class="nav-link <?= ($current_page == 'parents-list') ? 'active' : ''; ?>">
+        <img class="icon-white" src="assets/img/icons/family.png" alt="Custom Icon" >
+        <p>Parents's</p>
+      </a>
+    </li>
     <?php endif; ?>
 
     <!-- Check if the user is an admin -->

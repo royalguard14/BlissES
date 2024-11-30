@@ -88,6 +88,217 @@ class RegistrarMngtController extends BaseController {
     }
 
 
+        public function showsParentList() {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                COALESCE(u.email, 'No Data') AS email, 
+                COALESCE(u.user_id, 'No Data') AS user_id, 
+                COALESCE(u.role_id, 'No Data') AS role_id, 
+                COALESCE(p.last_name, 'No Data') AS last_name, 
+                COALESCE(p.first_name, 'No Data') AS first_name, 
+                COALESCE(p.middle_name, 'No Data') AS middle_name, 
+                COALESCE(p.sex, 'No Data') AS sex, 
+                COALESCE(p.birth_date, 'No Data') AS birth_date, 
+                COALESCE(p.mother_tongue, 'No Data') AS mother_tongue, 
+                COALESCE(p.ip_ethnic_group, 'No Data') AS ip_ethnic_group, 
+                COALESCE(p.religion, 'No Data') AS religion, 
+                COALESCE(p.house_street_sitio_purok, 'No Data') AS house_street_sitio_purok, 
+                COALESCE(p.barangay, 'No Data') AS barangay, 
+                COALESCE(p.municipality_city, 'No Data') AS municipality_city, 
+                COALESCE(p.province, 'No Data') AS province,
+                COALESCE(p.profile_id, 'No Data') AS profile_id,
+                COALESCE(p.contact_number, 'No Data') AS contact_number
+                FROM users u
+                LEFT JOIN profiles p ON u.user_id = p.profile_id
+                WHERE u.isDelete = 0 AND u.role_id = 6;
+                ");
+            $stmt->execute();
+            $parents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            include 'views/registrar/parent-list.php';
+        } catch (Exception $e) {
+        // Handle error gracefully
+            echo "An error occurred: " . $e->getMessage();
+        }
+    }
+
+
+
+
+
+
+public function addParentList(){
+ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $stmt = $this->db->prepare("SELECT function FROM campus_info WHERE id = 7");
+        $stmt->execute();
+        $institutional = $stmt->fetch(PDO::FETCH_ASSOC);
+        $email_extension = $institutional['function'];
+
+
+$role_id = 6;
+
+                try {
+                $lastName = $_POST['last_name'];
+                $firstName = $_POST['first_name'];
+                $middleName = $_POST['middle_name'];
+                $birthDate = $_POST['birth_date'];
+                $contact_number = $_POST['con_no'];
+                $sex = $_POST['sex'];
+                $username = $this->generateRandomUsername(8);
+                $email = str_replace(' ', '.', strtolower($firstName . '.' . $lastName . $email_extension));
+
+                $password = 'password';
+                $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+
+
+ $stmt = $this->db->prepare("
+            INSERT INTO users (email, password, username, role_id, isDelete) 
+            VALUES (:email, :password, :username, :role_id, 0)
+            ");
+        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+        $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+        $stmt->bindParam(':password', $hashed_password, PDO::PARAM_STR);
+        $stmt->bindParam(':role_id', $role_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $userId = $this->db->lastInsertId();
+        // Insert into profiles table
+        $stmt = $this->db->prepare("
+            INSERT INTO profiles (
+                profile_id, last_name, first_name, middle_name, birth_date, sex, contact_number 
+                ) VALUES (
+                :profile_id, :last_name, :first_name, :middle_name, :birth_date, :sex, :contact_number
+                )
+                ");
+        $stmt->bindParam(':profile_id', $userId, PDO::PARAM_INT);
+        $stmt->bindParam(':last_name', $lastName, PDO::PARAM_STR);
+        $stmt->bindParam(':first_name', $firstName, PDO::PARAM_STR);
+        $stmt->bindParam(':middle_name', $middleName, PDO::PARAM_STR);
+        $stmt->bindParam(':birth_date', $birthDate, PDO::PARAM_STR);
+        $stmt->bindParam(':sex', $sex, PDO::PARAM_STR);
+ 
+        $stmt->bindParam(':contact_number', $contact_number, PDO::PARAM_STR);
+        $stmt->execute();
+
+
+
+
+
+                header("Location: /BlissES/parents-list");
+                exit;
+            } catch (Exception $e) {
+                echo "Error adding teacher: " . $e->getMessage();
+            }
+
+ }
+
+
+}
+
+
+
+
+
+
+
+public function updateParentList() {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
+        $parent_id = (int) $_POST['user_id'];
+        $first_name = trim($_POST['first_name']);
+        $last_name = trim($_POST['last_name']);
+        $middle_name = trim($_POST['middle_name']);
+        $email = trim($_POST['email']);
+        $sex = $_POST['sex'];
+        $birth_date = $_POST['birth_date'];
+        $religion = trim($_POST['religion']);
+        $house_street_sitio = trim($_POST['house_street_sitio_purok']);
+        $barangay = trim($_POST['barangay']);
+        $municipality_city = trim($_POST['municipality_city']);
+        $province = trim($_POST['province']);
+        $contact_no = trim($_POST['conh_no']);
+
+        // Validate the email to ensure it is unique
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM users WHERE email = :email AND user_id != :parent_id");
+        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+        $stmt->bindParam(':parent_id', $parent_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $emailCount = $stmt->fetchColumn();
+        if ($emailCount > 0) {
+            echo "Error: This email is already in use.";
+            return;
+        }
+
+        try {
+            // Update the `users` table
+            $stmt = $this->db->prepare("UPDATE users SET 
+                email = :email 
+                WHERE user_id = :parent_id");
+            $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+            $stmt->bindParam(':parent_id', $parent_id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // Update the `profiles` table
+            $stmt = $this->db->prepare("UPDATE profiles SET
+                first_name = :first_name,
+                last_name = :last_name,
+                middle_name = :middle_name,
+                sex = :sex,
+                birth_date = :birth_date,
+                religion = :religion,
+                house_street_sitio_purok = :house_street_sitio,
+                barangay = :barangay,
+                municipality_city = :municipality_city,
+                province = :province,
+                contact_number = :contact_no
+                WHERE profile_id = :parent_id");
+            $stmt->bindParam(':first_name', $first_name, PDO::PARAM_STR);
+            $stmt->bindParam(':last_name', $last_name, PDO::PARAM_STR);
+            $stmt->bindParam(':middle_name', $middle_name, PDO::PARAM_STR);
+            $stmt->bindParam(':sex', $sex, PDO::PARAM_STR);
+            $stmt->bindParam(':birth_date', $birth_date, PDO::PARAM_STR);
+            $stmt->bindParam(':religion', $religion, PDO::PARAM_STR);
+            $stmt->bindParam(':house_street_sitio', $house_street_sitio, PDO::PARAM_STR);
+            $stmt->bindParam(':barangay', $barangay, PDO::PARAM_STR);
+            $stmt->bindParam(':municipality_city', $municipality_city, PDO::PARAM_STR);
+            $stmt->bindParam(':province', $province, PDO::PARAM_STR);
+            $stmt->bindParam(':contact_no', $contact_no, PDO::PARAM_STR);
+            $stmt->bindParam(':parent_id', $parent_id, PDO::PARAM_INT);
+
+            if ($stmt->execute()) {
+                header("Location: /BlissES/parents-list");
+                exit();
+            } else {
+                echo "Error: Could not update parent details.";
+            }
+        } catch (Exception $e) {
+            echo "Error: " . $e->getMessage();
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   public function addOrUploadTeacher() {
@@ -127,7 +338,8 @@ class RegistrarMngtController extends BaseController {
                     $province = trim($row[11]) ?: null;
 
                     $username = $this->generateRandomUsername(8);
-                    $email = strtolower($firstName . '.' . $lastName . $email_extension);
+                    $email = str_replace(' ', '.', strtolower($firstName . '.' . $lastName . $email_extension));
+
                     $password = 'password';
                     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
 
@@ -161,7 +373,7 @@ class RegistrarMngtController extends BaseController {
                     );
                 }
 
-                header("Location: /schoolsystem/teacher-list");
+                header("Location: /BlissES/teacher-list");
                 exit;
             } catch (Exception $e) {
                 echo "Error processing Excel file: " . $e->getMessage();
@@ -175,7 +387,8 @@ class RegistrarMngtController extends BaseController {
                 $birthDate = $_POST['birth_date'];
                 $sex = $_POST['sex'];
                 $username = $this->generateRandomUsername(8);
-                $email = strtolower($firstName . '.' . $lastName . $email_extension);
+                $email = str_replace(' ', '.', strtolower($firstName . '.' . $lastName . $email_extension));
+
                 $password = 'password';
                 $hashed_password = password_hash($password, PASSWORD_BCRYPT);
 
@@ -199,7 +412,7 @@ class RegistrarMngtController extends BaseController {
                     $role_id
                 );
 
-                header("Location: /schoolsystem/teacher-list");
+                header("Location: /BlissES/teacher-list");
                 exit;
             } catch (Exception $e) {
                 echo "Error adding teacher: " . $e->getMessage();
@@ -282,7 +495,8 @@ public function addOrUploadStudent() {
                     if (empty($firstName) || empty($lastName)) continue; // Skip if name is missing
 
                     // Generate email (ensure it's unique)
-                    $email = strtolower($firstName . '.' . $lastName . $email_extension);
+                    $email = str_replace(' ', '.', strtolower($firstName . '.' . $lastName . $email_extension));
+
                     $username = $this->generateRandomUsername(8);
                     $password = 'password';
                     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
@@ -317,7 +531,7 @@ public function addOrUploadStudent() {
       
                 }
 
-                header("Location: /schoolsystem/student-list"); 
+                header("Location: /BlissES/student-list"); 
                 exit;
             } catch (Exception $e) {
                 echo "Error processing Excel file: " . $e->getMessage();
@@ -334,7 +548,7 @@ public function addOrUploadStudent() {
 
 
 // Reusable method to insert into users and profiles tables
-private function insertUserAndProfile($email, $username, $hashed_password, $lastName, $firstName, $middleName, $birthDate, $sex, $motherTongue = null, $ip = null, $religion = null, $house = null, $brgy = null, $city = null, $province = null,$role_id,$lrn=null, $fathers_name = null,  $mother_name = null) {
+private function insertUserAndProfile($email, $username, $hashed_password, $lastName, $firstName, $middleName, $birthDate, $sex, $motherTongue = null, $ip = null, $religion = null, $house = null, $brgy = null, $city = null, $province = null,$role_id,$lrn=null, $fathers_name = null,  $mother_name = null, $contact_number = null,) {
     try {
 
         $stmt = $this->db->prepare("
@@ -351,10 +565,10 @@ private function insertUserAndProfile($email, $username, $hashed_password, $last
         $stmt = $this->db->prepare("
             INSERT INTO profiles (
                 profile_id, last_name, first_name, middle_name, birth_date, sex, 
-                mother_tongue, ip_ethnic_group, religion, house_street_sitio_purok, barangay, municipality_city, province, lrn, mother_name,fathers_name 
+                mother_tongue, ip_ethnic_group, religion, house_street_sitio_purok, barangay, municipality_city, province, lrn, mother_name,fathers_name, contact_number 
                 ) VALUES (
                 :profile_id, :last_name, :first_name, :middle_name, :birth_date, :sex, 
-                :mother_tongue, :ip_address, :religion, :house, :brgy, :city, :province, :lrn, :fathers_name, :mother_name
+                :mother_tongue, :ip_address, :religion, :house, :brgy, :city, :province, :lrn, :fathers_name, :mother_name, :contact_number
                 )
                 ");
         $stmt->bindParam(':profile_id', $userId, PDO::PARAM_INT);
@@ -373,6 +587,7 @@ private function insertUserAndProfile($email, $username, $hashed_password, $last
         $stmt->bindParam(':lrn', $lrn, PDO::PARAM_STR);
         $stmt->bindParam(':fathers_name', $fathers_name, PDO::PARAM_STR);
         $stmt->bindParam(':mother_name', $mother_name, PDO::PARAM_STR);
+        $stmt->bindParam(':contact_number', $contact_number, PDO::PARAM_STR);
         $stmt->execute();
     } catch (Exception $e) {
         throw $e;
@@ -441,7 +656,7 @@ public function updateTeacher() {
             $stmt->bindParam(':teacher_id', $teacher_id, PDO::PARAM_INT);  // Profile ID should be teacher_id as per your logic
             // Execute the query
             if ($stmt->execute()) {
-                header("Location: /schoolsystem/teacher-list"); // Redirect to teacher list
+                header("Location: /BlissES/teacher-list"); // Redirect to teacher list
                 exit();
             } else {
                 echo "Error: Could not update teacher details.";
@@ -529,7 +744,7 @@ public function updateStudent() {
             $stmt->bindParam(':teacher_id', $teacher_id, PDO::PARAM_INT); 
             // Execute the query
             if ($stmt->execute()) {
-                header("Location: /schoolsystem/students-list"); // Redirect to teacher list
+                header("Location: /BlissES/students-list"); // Redirect to teacher list
                 exit();
             } else {
                 echo "Error: Could not update teacher details.";
@@ -627,7 +842,7 @@ public function updateUser() {
         }
             // Execute query
         if ($stmt->execute()) {
-            $redirectPath = ($role === 3) ? "/schoolsystem/students-list" : "/schoolsystem/teacher-list";
+            $redirectPath = ($role === 3) ? "/BlissES/students-list" : "/BlissES/teacher-list";
             header("Location: $redirectPath");
             exit();
         } else {
@@ -643,7 +858,7 @@ public function deleteUser() {
         $user_id = (int) $_POST['user_id'];
         $paths = $_POST['paths'];
         // Validate paths
-        $allowedPaths = ['students-list', 'teacher-list'];
+        $allowedPaths = ['students-list', 'teacher-list','parents-list' ];
         if (!in_array($paths, $allowedPaths)) {
             echo "Invalid path.";
             return;
@@ -671,7 +886,7 @@ public function deleteUser() {
             // Commit the transaction
             $this->db->commit();
             // Redirect after successful deletion
-            header("Location: /schoolsystem/$paths");
+            header("Location: /BlissES/$paths");
             exit();
         } catch (Exception $e) {
             // Rollback in case of an error

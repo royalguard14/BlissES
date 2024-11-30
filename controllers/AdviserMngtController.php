@@ -37,6 +37,8 @@ class AdviserMngtController extends BaseController {
         $stmt->execute();
         $advisoryClass = $stmt->fetchAll(PDO::FETCH_ASSOC);
     // Include the view and pass the data
+
+
     } catch (Exception $e) {
         echo $e->getMessage();
         return;
@@ -102,7 +104,7 @@ public function enroll() {
                     $stmt->execute();
                 }
                 // Redirect to advisers page after enrollment
-                header("Location: /schoolsystem/myclass-list");
+                header("Location: /BlissES/myclass-list");
                 exit();
             } else {
                 echo "Error: You do not have permission to enroll students in this section.";
@@ -124,7 +126,7 @@ public function update() {
         $stmt->bindValue(':student_id', $studentId, PDO::PARAM_INT);
         $stmt->bindValue(':section_id', $sectionId, PDO::PARAM_INT);
         if ($stmt->execute()) {
-            header("Location: /schoolsystem/advisers");
+            header("Location: /BlissES/advisers");
             exit();
         } else {
             echo "Error: Could not update enrollment.";
@@ -179,7 +181,7 @@ public function unenroll() {
         $stmt->bindValue(':present_school_year', $presentSchoolYear, PDO::PARAM_INT);
         $stmt->bindValue(':adviser_id', $adviserId, PDO::PARAM_INT);
         if ($stmt->execute()) {
-            header("Location: /schoolsystem/myclass-list");
+            header("Location: /BlissES/myclass-list");
             exit();
         } else {
          echo "Error: Unable to unenroll the student.";
@@ -270,10 +272,16 @@ public function showAttendance(){
         LEFT JOIN enrollment_history eh ON eh.section_id = s.id
         LEFT JOIN profiles p ON eh.user_id = p.profile_id
         WHERE s.adviser_id = :adviser_id
+        Order by p.sex ASC, p.last_name ASC;
+     
         ");
     $stmt->bindValue(':adviser_id', $adviserId, PDO::PARAM_INT);
     $stmt->execute();
     $advisoryClass = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+
+
     // Initialize an array to hold attendance data for the view
     $attendanceData = [];
     // Now check the attendance and remarks for each student for today's date
@@ -417,10 +425,13 @@ public function showClassRecord() {
             profiles p ON eh.user_id = p.profile_id
             WHERE 
             s.adviser_id = :adviser_id
+            Order by p.last_name ASC
         ");
         $stmt->bindValue(':adviser_id', $adviserId, PDO::PARAM_INT);
         $stmt->execute();
         $advisoryClass = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
 
         // Fetch all subjects in the grade level
         $stmt = $this->db->prepare("

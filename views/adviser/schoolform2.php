@@ -67,7 +67,8 @@ input[type="radio"]:checked + .custom-radio::before {
 			<div class="card-body">
 				<!-- Form to mark attendance -->
 				<!-- Table to display students with checkboxes for attendance -->
-				<table id="attendanceTable" class="table table-bordered table-striped">
+				<table id="attendanceTable" class="table table-bordered table-striped table-head-fixed text-nowrap">
+					
 					<thead>
 						<tr>
 							<th>#</th>

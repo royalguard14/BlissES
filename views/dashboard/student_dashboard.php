@@ -1,6 +1,6 @@
 <?php
 ob_start();
-$pageTitle = 'Roles Management'; 
+$pageTitle = 'Dashboard'; 
 ?>
 <div class="row">
   <section class="col-lg-5 connectedSortable">

@@ -112,7 +112,7 @@ if (isset($_SESSION['error'])) {
 						<span aria-hidden="true">&times;</span>
 					</button>
 				</div>
-				<form action="/schoolsystem/campus-subjects/update" method="POST">
+				<form action="/BlissES/campus-subjects/update" method="POST">
 					<div class="modal-body">
 						<input type="hidden" id="modal-sub-id" name="sub_id">
 						<div class="form-group">

@@ -40,7 +40,8 @@ $pageTitle = 'School Form 1 - School Register';
       <div class="card-body">
 
 <div style="overflow-y: auto; max-height: 500px; border: 1px solid #ddd;">
-    <table id="example2" class="table table-bordered table-hover">
+    <!-- <table  class="table table-bordered table-hover"> -->
+         <table class="table table-head-fixed text-nowrap" id="example2">
         <thead>
             <tr>
                 <th colspan="9"></th>

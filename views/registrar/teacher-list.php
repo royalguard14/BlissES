@@ -229,7 +229,7 @@ function getInitials($string) {
             </button>
           </td>
             <td style="text-align: center; vertical-align: middle;">
-             <form action="/schoolsystem/users/delete" method="POST" style="display:inline;">
+             <form action="/BlissES/users/delete" method="POST" style="display:inline;">
     <input type="hidden" name="user_id" value="<?php echo $data['user_id']; ?>">
     <input type="hidden" name="paths" value="teacher-list">
     <button type="submit" class="btn btn-block btn-outline-danger btn-xs">Delete</button>
@@ -260,7 +260,7 @@ function getInitials($string) {
       </div>
       <div class="modal-body">
         <!-- Form to update teacher details -->
-        <form id="updateTeacherForm" method="POST" action="/schoolsystem/users/update">
+        <form id="updateTeacherForm" method="POST" action="/BlissES/users/update">
           <input type="hidden" name="user_id" id="teacherUserId">
           <input type="hidden" name="role_id" id="userrole">
           

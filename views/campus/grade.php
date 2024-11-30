@@ -130,7 +130,7 @@ include 'views/master.php';
 					<span aria-hidden="true">&times;</span>
 				</button>
 			</div>
-			<form action="/schoolsystem/campus-grades/update" method="POST">
+			<form action="/BlissES/campus-grades/update" method="POST">
 				<div class="modal-body">
 					<input type="hidden" id="modal-grade-id" name="grade_id">
 					<div class="form-group">

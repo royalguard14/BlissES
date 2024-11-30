@@ -1,7 +1,7 @@
 RewriteEngine On
 
 # Set the base directory for the application (if needed)
-RewriteBase /schoolsystem/
+RewriteBase /BlissES/
 
 # Rewrite all requests to index.php, except for actual files or directories
 RewriteCond %{REQUEST_FILENAME} !-f

@@ -27,7 +27,7 @@ class BaseController {
     // Method to check login status
     protected function checkLoginStatus() {
         if (!isset($_SESSION['log_in'])) {
-            header('Location: /schoolsystem/login');
+            header('Location: /BlissES/login');
             exit();
         }
     }
@@ -53,12 +53,12 @@ class BaseController {
             $permissions = explode(',', $role['permission_id']);
             if (!in_array($permissionId, $permissions)) {
                 // Redirect to unauthorized page if permission is not found
-                header('Location: /schoolsystem/unauthorized');
+                header('Location: /BlissES/unauthorized');
                 exit();
             }
         } else {
             // Redirect if role doesn't exist
-            header('Location: /schoolsystem/unauthorized');
+            header('Location: /BlissES/unauthorized');
             exit();
         }
     }
@@ -77,7 +77,7 @@ class BaseController {
                 // Destroy session and redirect to login
                 session_unset();
                 session_destroy();
-                header('Location: /schoolsystem/login');
+                header('Location: /BlissES/login');
                 exit();
             }
         }

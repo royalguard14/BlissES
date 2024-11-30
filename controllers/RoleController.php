@@ -31,7 +31,7 @@ class RoleController extends BaseController {
             $stmt->bindParam(':role_name', $role_name, PDO::PARAM_STR);
             if ($stmt->execute()) {
             // Redirect after successful creation
-                header("Location: /schoolsystem/roles");
+                header("Location: /BlissES/roles");
                 exit();
             } else {
                 echo "Error: Could not create role.";
@@ -49,7 +49,7 @@ class RoleController extends BaseController {
             $stmt->bindParam(':role_name', $role_name, PDO::PARAM_STR);
             $stmt->bindParam(':role_id', $role_id, PDO::PARAM_INT);
             if ($stmt->execute()) {
-                        header("Location: /schoolsystem/roles"); // Redirect to roles page after update
+                        header("Location: /BlissES/roles"); // Redirect to roles page after update
                         exit();
                     } else {
                         echo "Error: Could not update role.";
@@ -65,7 +65,7 @@ class RoleController extends BaseController {
                     $stmt->bindParam(':role_id', $role_id, PDO::PARAM_INT);
                     if ($stmt->execute()) {
                         // Redirect to the roles page after deletion
-                        header("Location: /schoolsystem/roles");
+                        header("Location: /BlissES/roles");
                         exit();
                     } else {
                         echo "Error: Could not delete role.";

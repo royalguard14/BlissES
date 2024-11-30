@@ -11,15 +11,15 @@ $pageTitle = 'User Management';
           Register New User
         </h3>
       </div>
-      <form action="/schoolsystem/account/create" method="POST">
+      <form action="/BlissES/account/create" method="POST">
         <div class="card-body">
                  <div class="form-group">
                     <label for="exampleInputEmail1">Email address</label>
-                    <input type="text" class="form-control" name="username" placeholder="Enter email" >
+                    <input type="text" class="form-control" name="username" placeholder="Enter email" autocomplete="new-username">
                   </div>
                   <div class="form-group">
                     <label for="exampleInputPassword1">Password</label>
-                    <input type="password" class="form-control" name="password" placeholder="Password">
+                    <input type="password" class="form-control" name="password" placeholder="Password" autocomplete="new-password">
                   </div>
 
 
@@ -59,7 +59,7 @@ $pageTitle = 'User Management';
             <th style="text-align: center;">#</th>
             <th style="text-align: center;">Username</th>
             <th style="text-align: center;">Status</th>
-            <th colspan="2" style="text-align: center;">Action</th>
+            <th style="text-align: center;">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -78,10 +78,8 @@ $pageTitle = 'User Management';
           onclick="openUserUpdateModal(<?php echo $user['user_id']; ?>, '<?php echo $user['username']; ?>', <?php echo $user['role_id']; ?>, <?php echo $user['isActive']; ?>)">
     Update
   </button>
-</td>
 
-          <td>
-            <form action="/schoolsystem/account/delete" method="POST" style="display:inline;">
+            <form action="/BlissES/account/delete" method="POST" style="display:inline;">
               <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
               <button type="submit" class="btn btn-block btn-outline-danger btn-xs">Delete</button>
             </form>
@@ -90,14 +88,7 @@ $pageTitle = 'User Management';
       <?php endforeach; ?>
     <?php endif; ?>
   </tbody>
-  <tfoot>
-    <tr>
-     <th style="text-align: center;">#</th>
-     <th style="text-align: center;">Username</th>
-     <th style="text-align: center;">Status</th>
-     <th colspan="2" style="text-align: center;">Action</th>
-   </tr>
- </tfoot>
+
 </table>
 </div>
 </div>
@@ -119,7 +110,7 @@ include 'views/master.php';
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <form action="/schoolsystem/account/update" method="POST">
+      <form action="/BlissES/account/update" method="POST">
         <div class="modal-body">
           <input type="hidden" id="modal-user-id" name="user_id">
           
@@ -189,4 +180,16 @@ include 'views/master.php';
     const activeStatusSelect = document.getElementById('modal-active-status');
     activeStatusSelect.value = isActive;
   }
+</script>
+
+<script type="text/javascript">
+      $('#example3').DataTable({
+      "paging": true,
+      "lengthChange": false,
+      "searching": true,
+      "ordering": true,
+      "info": true,
+      "autoWidth": false,
+      "responsive": true,
+    });
 </script>

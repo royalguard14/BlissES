@@ -71,7 +71,7 @@ class StudentAccessController extends BaseController {
             if (!$myenrollment_history) {
                 throw new Exception('You are not enrolled for the current academic year.');
             }
-         // Fetch all subjects in the grade level
+         
             $stmt = $this->db->prepare("
                 SELECT 
                 s.id AS subject_id,
@@ -95,7 +95,7 @@ class StudentAccessController extends BaseController {
             if (empty($subjectIds)) {
                 throw new Exception('No subjects found!!');
             }
-        // Fetch grades for the logged-in student
+        
             $gradesStmt = $this->db->prepare("
                 SELECT 
                 gr.user_id, 
@@ -112,12 +112,15 @@ class StudentAccessController extends BaseController {
             $gradesStmt->bindValue(':user_id', $myID, PDO::PARAM_INT);
             $gradesStmt->execute();
             $grades = $gradesStmt->fetchAll(PDO::FETCH_ASSOC);
-        // Transform grades into an associative array for easier lookup
+        
             $gradeMap = [];
             foreach ($grades as $grade) {
-    // Group by subject_id first, then by grading_id
+    
                 $gradeMap[$grade['subject_id']][$grade['grading_id']] = $grade['grade'];
             }
+
+
+
 
 
             $stmt = $this->db->prepare("
@@ -144,7 +147,7 @@ class StudentAccessController extends BaseController {
             $attendanceByMonth = [];
 
             foreach ($myAttendance as $record) {
-    $month = $record['month']; // Extract the month from the record
+    $month = $record['month']; 
     $attendanceByMonth[$month][] = [
         'date' => $record['date'],
         'status' => $record['status'],
@@ -164,9 +167,9 @@ include 'views/student/myProfile.php';
 
 public function uploadprofile() {
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['profile_pic'])) {
-        $userId = (int) $_SESSION['user_id']; // Get user ID from session
+        $userId = (int) $_SESSION['user_id']; 
 
-        // Fetch current profile picture path and LRN from the database
+        
         $stmt = $this->db->prepare("SELECT photo_path, lrn FROM profiles WHERE profile_id = :user_id");
         $stmt->bindParam(':user_id', $userId);
         $stmt->execute();
@@ -179,40 +182,40 @@ public function uploadprofile() {
 
         $lrn = $profile['lrn'];
 
-        // Check if file was uploaded successfully
+        
         if ($_FILES['profile_pic']['error'] === UPLOAD_ERR_OK) {
-            // Get file details
+            
             $fileTmpPath = $_FILES['profile_pic']['tmp_name'];
             $fileName = $_FILES['profile_pic']['name'];
             $fileSize = $_FILES['profile_pic']['size'];
             $fileType = $_FILES['profile_pic']['type'];
 
-            // Extract file extension
+            
             $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-            // Define allowed file extensions
+            
             $allowedExtensions = ['jpg', 'jpeg', 'png'];
 
-            // Validate file extension
+            
             if (in_array($fileExtension, $allowedExtensions)) {
-                // Create a new file name based on the LRN
+                
                 $uploadDir = 'assets/img/profile/';
                 $newFileName = $lrn . '.' . $fileExtension;
                 $destPath = $uploadDir . $newFileName;
 
-                // Resize the image
+                
                 $resizedImage = $this->resizeImage($fileTmpPath, 128, 128, $fileExtension);
 
                 if ($resizedImage) {
-                    // Save the resized image
-                    if (imagejpeg($resizedImage, $destPath, 90)) {  // Save as JPEG (quality 90)
-                        // Update the database with the new file path
+                    
+                    if (imagejpeg($resizedImage, $destPath, 90)) {  
+                        
                         $stmt = $this->db->prepare("UPDATE profiles SET photo_path = :photo_path WHERE profile_id = :user_id");
                         $stmt->bindParam(':photo_path', $destPath);
                         $stmt->bindParam(':user_id', $userId);
 
                         if ($stmt->execute()) {
-                                header("Location: /schoolsystem/learners-profile");
+                                header("Location: /BlissES/learners-profile");
             exit();
                         } else {
                             echo "Error updating profile photo in the database.";
@@ -235,7 +238,7 @@ public function uploadprofile() {
 }
 
 private function resizeImage($fileTmpPath, $width, $height, $extension) {
-    // Create a new image from the uploaded file
+    
     switch ($extension) {
         case 'jpg':
         case 'jpeg':
@@ -252,16 +255,16 @@ private function resizeImage($fileTmpPath, $width, $height, $extension) {
         return false;
     }
 
-    // Get current dimensions of the image
+    
     list($origWidth, $origHeight) = getimagesize($fileTmpPath);
 
-    // Create a new blank image with the desired size
+    
     $resizedImage = imagecreatetruecolor($width, $height);
 
-    // Resize the image
+    
     imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $width, $height, $origWidth, $origHeight);
 
-    // Return the resized image
+    
     return $resizedImage;
 }
 
@@ -269,15 +272,15 @@ private function resizeImage($fileTmpPath, $width, $height, $extension) {
 
 public function updateuserpass() {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $studentId = (int) $_SESSION['user_id']; // Retrieve the user ID from the session
+        $studentId = (int) $_SESSION['user_id']; 
         $username = $_POST['username'];
         $password = $_POST['passwd'];
 
         if (!empty($password)) {
-            // Hash the password if a new password is provided
+            
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-            // Update both username and password
+            
             $stmt = $this->db->prepare("
                 UPDATE users 
                 SET 
@@ -287,7 +290,7 @@ public function updateuserpass() {
                 ");
             $stmt->bindValue(':password', $hashedPassword, PDO::PARAM_STR);
         } else {
-            // Update only the username
+            
             $stmt = $this->db->prepare("
                 UPDATE users 
                 SET 
@@ -300,7 +303,7 @@ public function updateuserpass() {
         $stmt->bindValue(':student_id', $studentId, PDO::PARAM_INT);
 
         if ($stmt->execute()) {
-            header("Location: /schoolsystem/learners-profile");
+            header("Location: /BlissES/learners-profile");
             exit();
         } else {
             echo "Error: Could not update user credentials.";
@@ -312,48 +315,268 @@ public function updateuserpass() {
 
 
 
+public function myAttendance() {
+    
+    $myID = (int) $_SESSION['user_id'];
+
+    try {
+        
+        $stmt = $this->db->prepare("
+            SELECT
+            ar.eh_id, 
+            ar.date,
+            ar.status,
+            ar.remarks,
+            gl.level,
+            s.section_name,
+            concat(ay.start,'-',ay.end) as sy
+            FROM attendance_records ar
+            LEFT JOIN
+            enrollment_history eh ON ar.eh_id = eh.id
+            LEFT JOIN
+            grade_level gl ON eh.grade_level_id = gl.id
+            LEFT JOIN
+            sections s ON eh.section_id = s.id
+            LEFT JOIN
+            academic_year ay ON eh.academic_year_id = ay.id
+            WHERE ar.user_id = :myID
+            Order by ar.date DESC
+        ");
+        
+        $stmt->bindValue(':myID', $myID, PDO::PARAM_INT);
+        $stmt->execute();
+        $myAttendance = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    } catch (Exception $e) {
+        echo "Error: " . $e->getMessage();
+        return;
+    }
+
+    
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-public function myAttendance()
-{
-   include 'views/student/myAttendance.php';
+    
+    include 'views/student/myAttendance.php';
 }
 
-public function enrollmentHistory()
-{
+public function enrollmentHistory(){
+
+
+        $myID = (int) $_SESSION['user_id'];
+
+    try {
+        
+        $stmt = $this->db->prepare("
+            SELECT
+            gl.level,
+            s.section_name,
+            eh.enrollment_date as date,
+            CONCAT(COALESCE(p.last_name, ''), ', ',COALESCE(p.first_name, ''), ' ',COALESCE(
+            CASE
+            WHEN p.middle_name IS NOT NULL AND p.middle_name != '' 
+            THEN CONCAT(SUBSTRING(p.middle_name, 1, 1), '.')
+            ELSE ''
+            END, '') ) AS adviser,
+            concat(ay.start,'-',ay.end) as sy
+
+            FROM enrollment_history eh
+       
+            LEFT JOIN
+            grade_level gl ON eh.grade_level_id = gl.id
+            LEFT JOIN
+            sections s ON eh.section_id = s.id
+            LEFT JOIN
+            academic_year ay ON eh.academic_year_id = ay.id
+            LEFT JOIN
+            profiles p ON p.profile_id = eh.adviser_id
+            WHERE eh.user_id = :myID
+            
+        ");
+        
+        $stmt->bindValue(':myID', $myID, PDO::PARAM_INT);
+        $stmt->execute();
+        $myEHistory = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    } catch (Exception $e) {
+        echo "Error: " . $e->getMessage();
+        return;
+    }
+
+    
+
+    
+    
    include 'views/student/myEnrollmentHistory.php';
 }
 
 
-public function academicHistory()
-{
+public function academicHistory(){
+
+
+ $user_id = (int) $_SESSION['user_id']; // Current logged-in user
+
+try {
+
+    $stmt = $this->db->prepare("
+    SELECT 
+        s.name AS subject_name,
+        MAX(CASE WHEN gr.grading_id = 1 THEN gr.grade ELSE '' END) AS first_grading,
+        MAX(CASE WHEN gr.grading_id = 2 THEN gr.grade ELSE '' END) AS second_grading,
+        MAX(CASE WHEN gr.grading_id = 3 THEN gr.grade ELSE '' END) AS third_grading,
+        MAX(CASE WHEN gr.grading_id = 4 THEN gr.grade ELSE '' END) AS fourth_grading,
+        CASE 
+            WHEN COUNT(CASE WHEN gr.grading_id IN (1, 2, 3, 4) THEN gr.grade ELSE NULL END) = 4 THEN 
+                ROUND(AVG(CASE WHEN gr.grading_id IN (1, 2, 3, 4) THEN gr.grade END), 2)
+            ELSE ''
+        END AS general_average,
+        CASE 
+            WHEN COUNT(CASE WHEN gr.grading_id IN (1, 2, 3, 4) THEN gr.grade ELSE NULL END) = 4 AND 
+                 ROUND(AVG(CASE WHEN gr.grading_id IN (1, 2, 3, 4) THEN gr.grade END), 2) >= 75 THEN 'Passed'
+            WHEN COUNT(CASE WHEN gr.grading_id IN (1, 2, 3, 4) THEN gr.grade ELSE NULL END) = 4 THEN 'Failed'
+            ELSE ''
+        END AS status
+    FROM 
+        subjects s
+    LEFT JOIN 
+        grade_records gr ON s.id = gr.subject_id AND gr.user_id = :user_id
+    GROUP BY 
+        s.id;
+    ");
+
+    // Bind parameters
+    $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+
+    // Execute and fetch results
+    $stmt->execute();
+    $subjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+
+} catch (Exception $e) {
+    echo $e->getMessage();
+    return;
+}
+
    include 'views/student/myAcademicHistory.php';
 }
 
 
 public function storage()
 {
-   include 'views/student/myStorage.php';
+    $myID = (int)$_SESSION['user_id'];
+    $stmt = $this->db->prepare("
+        SELECT
+            p.lrn
+        FROM 
+            profiles p
+        LEFT JOIN 
+            users u ON u.user_id = p.profile_id
+        WHERE 
+            u.user_id = :myID;
+    ");
+    $stmt->bindValue(':myID', $myID, PDO::PARAM_INT);
+    $stmt->execute();
+    $myLRN = $stmt->fetch(PDO::FETCH_ASSOC)['lrn'];
+    $uploadDir = "assets/documents/" . $myLRN . "/";
+
+    // Scan files if directory exists
+    $files = [];
+    if (is_dir($uploadDir)) {
+        $files = array_diff(scandir($uploadDir), array('.', '..'));
+    }
+
+    // Pass files to the view
+    include 'views/student/myStorage.php';
+}
+
+
+
+public function uploadDocs(){
+// Ensure the target directory exists
+function createDirectory($path) {
+    if (!is_dir($path)) {
+        mkdir($path, 0777, true);
+    }
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+$myID = (int) $_SESSION['user_id'];
+ $stmt = $this->db->prepare("
+                SELECT
+                p.lrn
+                FROM 
+                profiles p
+                LEFT JOIN 
+                users u ON u.user_id = p.profile_id
+                WHERE 
+                u.user_id = :myID;
+                ");
+            $stmt->bindValue(':myID', $myID, PDO::PARAM_INT);
+            $stmt->execute();
+            $myLRN = $stmt->fetch(PDO::FETCH_ASSOC)['lrn'];
+    $uploadDir = "assets/documents/" . $myLRN . "/";
+    // Ensure upload directory exists
+    createDirectory($uploadDir);
+    // Handle uploaded file
+    if (isset($_FILES['document']) && $_FILES['document']['error'] === UPLOAD_ERR_OK) {
+        $fileTmpPath = $_FILES['document']['tmp_name'];
+        $fileName = basename($_FILES['document']['name']);
+        $fileDestination = $uploadDir . $fileName;
+        // Move uploaded file
+        if (move_uploaded_file($fileTmpPath, $fileDestination)) {
+             $_SESSION['success'] = "File Uploaded Successfully";
+            header("Location: /BlissES/learners-storage");
+            exit();
+        } else {
+            $_SESSION['error'] = "Error: Failed to move uploaded file.";
+        }
+    } else {
+        $_SESSION['error'] = "Error: No file uploaded or there was an upload error.";
+    }
+}
+
+
+
 }
 
 
 
 
 
+public function deleteFile(){
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['file'])) {
+    $myID = (int) $_SESSION['user_id'];
+ $stmt = $this->db->prepare("
+                SELECT
+                p.lrn
+                FROM 
+                profiles p
+                LEFT JOIN 
+                users u ON u.user_id = p.profile_id
+                WHERE 
+                u.user_id = :myID;
+                ");
+            $stmt->bindValue(':myID', $myID, PDO::PARAM_INT);
+            $stmt->execute();
+            $myLRN = $stmt->fetch(PDO::FETCH_ASSOC)['lrn'];
+            
+    $file = basename($_POST['file']); // Ensure no directory traversal
+    $uploadDir = "assets/documents/" . $myLRN . "/";
+    $filePath = $uploadDir . $file;
 
-
+    if (file_exists($filePath)) {
+        if (unlink($filePath)) {
+            $_SESSION['success'] = "File deleted successfully.";
+        } else {
+            $_SESSION['error'] = "Failed to delete the file.";
+        }
+    } else {
+        $_SESSION['error'] = "File does not exist.";
+    }
+}
+        header("Location: /BlissES/learners-storage");
+exit();
+    
+}
 
 
 

@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 27, 2024 at 12:40 AM
+-- Generation Time: Nov 30, 2024 at 12:48 PM
 -- Server version: 10.4.22-MariaDB
--- PHP Version: 7.4.27
+-- PHP Version: 8.1.0
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -71,7 +71,8 @@ INSERT INTO `attendance_records` (`id`, `user_id`, `eh_id`, `date`, `status`, `r
 (19, 225, 23, '2024-11-25', 'P', NULL, '2024-11-24 16:51:50', '2024-11-24 16:59:13'),
 (20, 236, 30, '2024-11-25', 'E', 'sad', '2024-11-24 16:52:32', '2024-11-24 17:12:20'),
 (21, 230, 28, '2024-11-25', 'P', NULL, '2024-11-24 17:03:28', '2024-11-24 17:03:28'),
-(22, 222, 20, '2024-11-25', 'P', NULL, '2024-11-25 02:41:18', '2024-11-25 02:41:18');
+(22, 222, 20, '2024-11-25', 'P', NULL, '2024-11-25 02:41:18', '2024-11-25 02:41:18'),
+(23, 221, 34, '2024-11-28', 'P', NULL, '2024-11-28 06:37:50', '2024-11-28 06:37:50');
 
 -- --------------------------------------------------------
 
@@ -96,7 +97,20 @@ INSERT INTO `campus_info` (`id`, `name`, `function`) VALUES
 (4, 'Logo', NULL),
 (5, 'Principal', 'Luz F. Bongabong'),
 (6, 'Present School Year', '4'),
-(7, 'Institutional Email', '@zear_developer.com');
+(7, 'Institutional Email', '@zear_developer.com'),
+(8, 'Grading', '1');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `emoji`
+--
+
+CREATE TABLE `emoji` (
+  `id` int(11) NOT NULL,
+  `shortcode` varchar(50) NOT NULL,
+  `unicode` varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -172,9 +186,48 @@ CREATE TABLE `grade_records` (
   `user_id` int(11) NOT NULL,
   `eh_id` int(11) NOT NULL,
   `subject_id` int(11) NOT NULL,
+  `grading_id` int(11) NOT NULL,
   `grade` decimal(5,2) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `grade_records`
+--
+
+INSERT INTO `grade_records` (`id`, `user_id`, `eh_id`, `subject_id`, `grading_id`, `grade`, `created_at`, `updated_at`) VALUES
+(1, 222, 20, 1, 1, '80.00', '2024-11-28 10:24:16', '2024-11-28 10:46:50'),
+(2, 221, 34, 1, 1, '90.00', '2024-11-28 10:24:24', '2024-11-28 10:27:37'),
+(3, 221, 34, 2, 1, '86.00', '2024-11-28 10:24:27', '2024-11-28 10:27:34'),
+(4, 221, 34, 3, 1, '80.00', '2024-11-28 10:27:31', '2024-11-28 10:27:31'),
+(5, 222, 20, 2, 1, '100.00', '2024-11-28 10:46:54', '2024-11-28 10:46:54');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `messages`
+--
+
+CREATE TABLE `messages` (
+  `id` int(11) NOT NULL,
+  `sender_id` int(11) NOT NULL,
+  `receiver_id` int(11) NOT NULL,
+  `content` text NOT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `sent_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `message_emoji`
+--
+
+CREATE TABLE `message_emoji` (
+  `id` int(11) NOT NULL,
+  `message_id` int(11) NOT NULL,
+  `emoji_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
@@ -201,8 +254,11 @@ INSERT INTO `permissions` (`permission_id`, `permission_name`) VALUES
 (10, 'Manage Faculty'),
 (8, 'Manage Grades'),
 (7, 'Manage Learners'),
+(12, 'Manage messages'),
 (2, 'Manage Permissions'),
-(1, 'Manage Roles');
+(1, 'Manage Roles'),
+(13, 'Parent Access'),
+(11, 'Student Access');
 
 -- --------------------------------------------------------
 
@@ -212,6 +268,7 @@ INSERT INTO `permissions` (`permission_id`, `permission_name`) VALUES
 
 CREATE TABLE `profiles` (
   `id` int(11) NOT NULL,
+  `photo_path` varchar(500) DEFAULT NULL,
   `profile_id` int(11) NOT NULL,
   `lrn` varchar(12) DEFAULT NULL,
   `last_name` varchar(255) NOT NULL,
@@ -239,48 +296,49 @@ CREATE TABLE `profiles` (
 -- Dumping data for table `profiles`
 --
 
-INSERT INTO `profiles` (`id`, `profile_id`, `lrn`, `last_name`, `first_name`, `middle_name`, `sex`, `birth_date`, `age_as_of_oct_31`, `mother_tongue`, `ip_ethnic_group`, `religion`, `house_street_sitio_purok`, `barangay`, `municipality_city`, `province`, `fathers_name`, `mother_name`, `guardian_name`, `relationship`, `contact_number`, `created_at`) VALUES
-(199, 219, '132023230013', 'ADTOON', 'CHRISTIAN MARK', 'MAGLINAO', 'M', '2017-12-27', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'MAHAY', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'MAGLINAO,JOYCE MARIE CHRISTINE,CLARIDAD,', 'ADTOON, CYREL MARK CASOCOT', NULL, NULL, NULL, '2024-11-24 02:04:33'),
-(200, 220, '212502230070', 'AMORA', 'JAN LUCAS', 'LIBARNES', 'M', '2018-01-17', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'NEW SOCIETY VILLAGE POB. (BGY. 26)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'LIBARNES,JINGLE,SALAR,', 'AMORA, NICSON JOSE', NULL, NULL, NULL, '2024-11-24 02:04:33'),
-(201, 221, '132023230235', 'CABATINGAN', 'ELIAKYM', 'BUSCANO', 'M', '2018-02-28', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'SAN VICENTE', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'BUSCANO,REBECCA,AGUSTIN,', 'CABATINGAN, PAUL LAGRADA', NULL, NULL, NULL, '2024-11-24 02:04:33'),
-(202, 222, '132118230189', 'CALO', 'AKIL MARK', 'BALAGULAN', 'M', '2017-12-31', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'LIMAHA POB. (BGY. 14)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'BALAGULAN,APRILYN,JUMADLA,', 'CALO, MARK ALVIN ABOC', NULL, NULL, NULL, '2024-11-24 02:04:33'),
-(203, 223, '132023230124', 'EJANDRA', 'KAIZZER JAZZ', 'POJAS', 'M', '2018-04-18', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BAAN RIVERSIDE POB. (BGY. 20)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'POJAS,JOAHLY ROSE,LOOD,', 'EJANDRA, KENDALL DAO', NULL, NULL, NULL, '2024-11-24 02:04:33'),
-(204, 224, '405978230006', 'GUMANIT', 'KING RIBEN', 'DELECTOR', 'M', '2018-09-07', 0, 'Cebuano', NULL, 'Christianity', NULL, 'OBRERO POB. (BGY. 18)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'DELECTOR,RIZA,ACEBEDO,', 'GUMANIT, BENJIE BOY SAVELLON', NULL, NULL, NULL, '2024-11-24 02:04:33'),
-(205, 225, '132023230076', 'JAMIL', 'ALLYSON DWEN', '-', 'M', '2017-05-03', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'GOLDEN RIBBON POB. (BGY. 2)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'JAMIL,MELANIE,DEARINE,', '', NULL, NULL, NULL, '2024-11-24 02:04:33'),
-(206, 226, '132023230305', 'NOMIO', 'RAFHAEL', 'BARRETO', 'M', '2018-10-09', 0, 'Cebuano', NULL, 'Christianity', NULL, 'NEW SOCIETY VILLAGE POB. (BGY. 26)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'BARRETO,RITZEL LYN,TONGOL,', 'NOMIO, RICKY BUQUE', NULL, NULL, NULL, '2024-11-24 02:04:34'),
-(207, 227, '132023230299', 'PALAO', 'MONAIM', 'NAGAMORA', 'M', '2018-06-04', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'NEW SOCIETY VILLAGE POB. (BGY. 26)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'NAGAMORA,OMERAH,NOOR,', 'PALAO, MANTANI MACABUNAR', NULL, NULL, NULL, '2024-11-24 02:04:34'),
-(208, 228, '212502230105', 'TOMO', 'SYMEON REUVEN', 'MAG-ISA', 'M', '2017-01-11', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'TAGUIBO', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'MAG-ISA,MARIA NIÑA,PIOL,', 'TOMO, RISTY PADUA', NULL, NULL, NULL, '2024-11-24 02:04:34'),
-(209, 229, '410419230015', 'VELASCO', 'VINCE HALLY', 'PAHIT', 'M', '2018-03-24', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'SAN VICENTE', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'PAHIT,MARIDEL,POLISTICO,', 'VELASCO, ERVIN DUMANDAN', NULL, NULL, NULL, '2024-11-24 02:04:34'),
-(210, 230, '472513230043', 'VILLONES', 'XIMMON BLAKE', 'MACUNO', 'M', '2018-06-25', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BANCASI', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'MACUNO,EMILY JOY,BUAYA,', 'VILLONES, JAMES MHYR DAHOYLA', NULL, NULL, NULL, '2024-11-24 02:04:34'),
-(211, 231, '132023230109', 'WONG', 'SEAN ANDRIE', 'JAÑA', 'M', '2017-12-15', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'LAPU-LAPU POB. (BGY. 8)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'JAÑA,MIKKI,GASTA,', 'WONG, ROBERT SALIBAY', NULL, NULL, NULL, '2024-11-24 02:04:34'),
-(212, 232, '501553230018', 'ZOILO', 'ELDZHOOD', 'BACLAY', 'M', '2018-05-02', 0, 'Cebuano/Kana/Sinugboanong Bini', NULL, 'Christianity', NULL, 'BAAN KM 3', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'BACLAY,MARIE GRACE,NACAR,', 'ZOILO, ELDOVRELE FUENTES', NULL, NULL, NULL, '2024-11-24 02:04:34'),
-(213, 233, '132023230231', 'CAMPOS', 'REE ANN GRACE', 'SUAREZ', 'F', '2017-12-09', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BADING POB. (BGY. 22)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'SUAREZ,ANVIC GRACE,ALBORES,', 'CAMPOS, REEDICK JOHN PAUMIG', NULL, NULL, NULL, '2024-11-24 02:04:34'),
-(214, 234, '132023230028', 'CANU-OG', 'ZAYEEN FAYE', 'RAMOS', 'F', '2018-05-31', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'LIBERTAD', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'RAMOS,CRIZALYN,CABALLES,', 'CANU-OG, REY BATIQUIN', NULL, NULL, NULL, '2024-11-24 02:04:35'),
-(215, 235, '132023230194', 'CORBES', 'MAJA SOPHIA', 'ALENYABON', 'F', '2018-04-20', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BADING POB. (BGY. 22)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'ALENYABON,JANETH,R,', 'CORBES, MARLON J', NULL, NULL, NULL, '2024-11-24 02:04:35'),
-(216, 236, '132023230201', 'DEGAMON', 'ROSELYN', 'FEDILIS', 'F', '2012-11-01', 0, 'Sinurigaonon', NULL, 'Christianity', NULL, 'BAAN KM 3', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'FEDILIS,ROSALINA,REÑUS,', 'DEGAMON, ARCADIO VILLARONZA JR', NULL, NULL, NULL, '2024-11-24 02:04:35'),
-(217, 237, '132023230137', 'EGAY', 'JHIELIANNE', 'LASWE', 'F', '2017-11-27', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BUHANGIN POB. (BGY. 19)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'LASWE,JACQUELOU,QUERIE-QUERIE,', 'EGAY, ELONUF RANA', NULL, NULL, NULL, '2024-11-24 02:04:35'),
-(218, 238, '132123230004', 'GALSIM', 'CARRA JANINE', 'MUCA', 'F', '2018-10-19', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BANCASI', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'MUCA,REJEAN,LINGA-ON,', 'GALSIM, CARLO FLORIDA', NULL, NULL, NULL, '2024-11-24 02:04:35'),
-(219, 239, '132023230214', 'KHAN', 'HAIFA', 'BURGOS', 'F', '2018-02-23', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Islam', NULL, 'VILLA KANANGA', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'BURGOS,MARITES,SAGON,', 'KHAN, MOHAMMED TABREZ', NULL, NULL, NULL, '2024-11-24 02:04:35'),
-(220, 240, '212502230090', 'LASTIMOSA', 'CELESTINE JHIME', 'CAGAPE', 'F', '2018-06-18', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BONBON', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'CAGAPE,DIMEMHOR,ARELLANO,', 'LASTIMOSA, JACOB TRILLO', NULL, NULL, NULL, '2024-11-24 02:04:35'),
-(221, 241, '132023230216', 'LEGASPI', 'JULIA OFELIA', 'RUBIO', 'F', '2018-02-10', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'GOLDEN RIBBON POB. (BGY. 2)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'RUBIO,LEAH MAE,CALANG,', 'LEGASPI, JOEFFER ALINGASA', NULL, NULL, NULL, '2024-11-24 02:04:35'),
-(222, 242, '132023230034', 'PULIDO', 'SOFIA JADE', 'LARIOSA', 'F', '2017-11-10', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Buddhism', NULL, 'DOONGAN', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'LARIOSA,GAY AMOR,ERNO,', 'PULIDO, JOHN CARLO GABRIEL', NULL, NULL, NULL, '2024-11-24 02:04:36'),
-(223, 243, '212502230146', 'SAGON', 'ALEXANDRA LOUISE', 'ELUMBA', 'F', '2017-12-18', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'AGUSAN PEQUEÃ‘O', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'ELUMBA,LUCYMAR,ALBERIO,', 'SAGON, ARNEL ARAGON', NULL, NULL, NULL, '2024-11-24 02:04:36'),
-(224, 244, '132023230036', 'SALVAÑA', 'BLAKELY VEAN', '-', 'F', '2018-05-16', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'PORT POYOHON POB. (BGY. 17 - NEW ASIA)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'SALVAÑA,VIOL KIMBERLY CRIS,,', '', NULL, NULL, NULL, '2024-11-24 02:04:36'),
-(225, 245, '212502230033', 'VIDAL', 'HANNIYAH RAYN', 'ALBANO', 'F', '2018-02-12', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'GOLDEN RIBBON POB. (BGY. 2)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'ALBANO,HANNAH MAY,ALIGAM,', 'VIDAL, RAYNAN BAYABAYA', NULL, NULL, NULL, '2024-11-24 02:04:36'),
-(226, 246, '132023230227', 'CAMPOS', 'CHRIS DIRRECK', 'CASTILLO', 'M', '2018-03-23', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'ONG YIU POB. (BGY. 16)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'CASTILLO,MARY GRACE,ACOSTA,', 'CAMPOS, ENGELBERT LORENZO', NULL, NULL, NULL, '2024-11-24 02:04:36'),
-(227, 247, '132023230092', 'HILO', 'ART DANIEL', 'GAMIL', 'M', '2018-04-02', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'JOSE RIZAL POB. (BGY. 25)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'GAMIL,SHAMEN,SULAPAS,', 'HILO, ARTEMIO CASAS', NULL, NULL, NULL, '2024-11-24 02:04:36'),
-(228, 248, '212502230058', 'MARCIAL', 'KRISTOFF LYLE', 'ACERA', 'M', '2018-09-08', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'ANTONGALON', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'ACERA,CHRISTIAN MAE,TIMBAL,', 'MARCIAL, MAERC JOSEPH PATETE', NULL, NULL, NULL, '2024-11-24 02:04:36'),
-(229, 249, '132023230095', 'MERCADO', 'RXIAN ELIOT', 'ABARQUEZ', 'M', '2017-12-11', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BAAN KM 3', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'ABARQUEZ,ROCHE JANE,ANDRADE,', 'MERCADO, RALPH CHRISTIAN JULAO', NULL, NULL, NULL, '2024-11-24 02:04:36'),
-(230, 250, '501285230005', 'NAPIZA', 'LUKE ALEXANDER', 'RIVERA', 'M', '2018-09-06', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'MAON POB. (BGY. 1)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'RIVERA,SHIELA MAE,PEREZ,', 'NAPIZA, CHRISTIAN TORREGOSA', NULL, NULL, NULL, '2024-11-24 02:04:36'),
-(231, 251, '132023230004', 'PADEN', 'BRIX EDRIANE', 'QUINTANA', 'M', '2017-12-10', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'MAHOGANY POB. (BGY. 21)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'QUINTANA,JOY,BUSA,', 'PADEN, ARNEL AMOGUIS', NULL, NULL, NULL, '2024-11-24 02:04:37'),
-(232, 252, '132023230003', 'PADEN', 'HENARRY CLIENT', 'QUINTANA', 'M', '2017-12-10', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'MAHOGANY POB. (BGY. 21)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'QUINTANA,JOY,BUSA,', 'PADEN, ARNEL AMOGUIS', NULL, NULL, NULL, '2024-11-24 02:04:37'),
-(233, 253, '132023230280', 'PAGALAN', 'JAMES RAYCIAN', 'DURAN', 'M', '2018-01-28', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BADING POB. (BGY. 22)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'DURAN,NICHELLE SHANE,ALIM,', 'PAGALAN, RAYMART LEMOS', NULL, NULL, NULL, '2024-11-24 02:04:37'),
-(234, 254, '132023230273', 'PANTALEON', 'KIER CYAN', 'INCHOCO', 'M', '2017-11-07', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BANZA', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'INCHOCO,KIMBERLY,-,', 'PANTALEON, ROITER ENTEÑA', NULL, NULL, NULL, '2024-11-24 02:04:37'),
-(235, 255, '132023230244', 'PLAZA', 'CHRIS EVAN', 'OSIGAN', 'M', '2018-10-25', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BADING POB. (BGY. 22)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'OSIGAN,RICHEL,FORTUN,', 'PLAZA, FRANCISCO FRANCISCO JR', NULL, NULL, NULL, '2024-11-24 02:04:37'),
-(236, 256, '132023230250', 'REYES', 'DANIEL', 'SALAS', 'M', '2018-03-19', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'DAGOHOY POB. (BGY. 7)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'SALAS,DIOSCORA,AMONCIO,', 'REYES, ARNEL LUSTERIO', NULL, NULL, NULL, '2024-11-24 02:04:37'),
-(237, 257, '212502230051', 'ROSALES', 'AIVANN JACOB', 'GABORNE', 'M', '2018-10-17', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'LAPU-LAPU POB. (BGY. 8)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'GABORNE,CHRISTINE,VILLARIAS,', 'ROSALES, ROMMEL OMBAO', NULL, NULL, NULL, '2024-11-24 02:04:37'),
-(238, 258, '132023230278', 'TALLEDO', 'RENZO', 'ARNAIZ', 'M', '2018-06-11', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'HOLY REDEEMER POB. (BGY. 23)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'ARNAIZ,ROBELEN,MONTON,', 'TALLEDO, REYMON LLAMAS', NULL, NULL, NULL, '2024-11-24 02:04:38'),
-(239, 259, '132023230253', 'UTAR', 'JAYDEE TYLER', 'BURDEOS', 'M', '2018-05-30', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'MAON POB. (BGY. 1)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'BURDEOS,DEVINE GRACE,LAURITO,', '', NULL, NULL, NULL, '2024-11-24 02:04:38');
+INSERT INTO `profiles` (`id`, `photo_path`, `profile_id`, `lrn`, `last_name`, `first_name`, `middle_name`, `sex`, `birth_date`, `age_as_of_oct_31`, `mother_tongue`, `ip_ethnic_group`, `religion`, `house_street_sitio_purok`, `barangay`, `municipality_city`, `province`, `fathers_name`, `mother_name`, `guardian_name`, `relationship`, `contact_number`, `created_at`) VALUES
+(199, NULL, 219, '132023230013', 'ADTOON', 'CHRISTIAN MARK', 'MAGLINAO', 'M', '2017-12-27', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'MAHAY', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'MAGLINAO,JOYCE MARIE CHRISTINE,CLARIDAD,', 'ADTOON, CYREL MARK CASOCOT', NULL, NULL, NULL, '2024-11-24 02:04:33'),
+(200, NULL, 220, '212502230070', 'AMORA', 'JAN LUCAS', 'LIBARNES', 'M', '2018-01-17', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'NEW SOCIETY VILLAGE POB. (BGY. 26)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'LIBARNES,JINGLE,SALAR,', 'AMORA, NICSON JOSE', NULL, NULL, NULL, '2024-11-24 02:04:33'),
+(201, 'assets/img/profile/132023230235.jpg', 221, '132023230235', 'CABATINGAN', 'ELIAKYM', 'BUSCANO', 'M', '2018-02-28', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'SAN VICENTE', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'BUSCANO,REBECCA,AGUSTIN,', 'CABATINGAN, PAUL LAGRADA', NULL, NULL, NULL, '2024-11-24 02:04:33'),
+(202, NULL, 222, '132118230189', 'CALO', 'AKIL MARK', 'BALAGULAN', 'M', '2017-12-31', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'LIMAHA POB. (BGY. 14)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'BALAGULAN,APRILYN,JUMADLA,', 'CALO, MARK ALVIN ABOC', NULL, NULL, NULL, '2024-11-24 02:04:33'),
+(203, NULL, 223, '132023230124', 'EJANDRA', 'KAIZZER JAZZ', 'POJAS', 'M', '2018-04-18', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BAAN RIVERSIDE POB. (BGY. 20)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'POJAS,JOAHLY ROSE,LOOD,', 'EJANDRA, KENDALL DAO', NULL, NULL, NULL, '2024-11-24 02:04:33'),
+(204, NULL, 224, '405978230006', 'GUMANIT', 'KING RIBEN', 'DELECTOR', 'M', '2018-09-07', 0, 'Cebuano', NULL, 'Christianity', NULL, 'OBRERO POB. (BGY. 18)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'DELECTOR,RIZA,ACEBEDO,', 'GUMANIT, BENJIE BOY SAVELLON', NULL, NULL, NULL, '2024-11-24 02:04:33'),
+(205, NULL, 225, '132023230076', 'JAMIL', 'ALLYSON DWEN', '-', 'M', '2017-05-03', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'GOLDEN RIBBON POB. (BGY. 2)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'JAMIL,MELANIE,DEARINE,', '', NULL, NULL, NULL, '2024-11-24 02:04:33'),
+(206, NULL, 226, '132023230305', 'NOMIO', 'RAFHAEL', 'BARRETO', 'M', '2018-10-09', 0, 'Cebuano', NULL, 'Christianity', NULL, 'NEW SOCIETY VILLAGE POB. (BGY. 26)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'BARRETO,RITZEL LYN,TONGOL,', 'NOMIO, RICKY BUQUE', NULL, NULL, NULL, '2024-11-24 02:04:34'),
+(207, NULL, 227, '132023230299', 'PALAO', 'MONAIM', 'NAGAMORA', 'M', '2018-06-04', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'NEW SOCIETY VILLAGE POB. (BGY. 26)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'NAGAMORA,OMERAH,NOOR,', 'PALAO, MANTANI MACABUNAR', NULL, NULL, NULL, '2024-11-24 02:04:34'),
+(208, NULL, 228, '212502230105', 'TOMO', 'SYMEON REUVEN', 'MAG-ISA', 'M', '2017-01-11', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'TAGUIBO', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'MAG-ISA,MARIA NIÑA,PIOL,', 'TOMO, RISTY PADUA', NULL, NULL, NULL, '2024-11-24 02:04:34'),
+(209, NULL, 229, '410419230015', 'VELASCO', 'VINCE HALLY', 'PAHIT', 'M', '2018-03-24', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'SAN VICENTE', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'PAHIT,MARIDEL,POLISTICO,', 'VELASCO, ERVIN DUMANDAN', NULL, NULL, NULL, '2024-11-24 02:04:34'),
+(210, NULL, 230, '472513230043', 'VILLONES', 'XIMMON BLAKE', 'MACUNO', 'M', '2018-06-25', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BANCASI', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'MACUNO,EMILY JOY,BUAYA,', 'VILLONES, JAMES MHYR DAHOYLA', NULL, NULL, NULL, '2024-11-24 02:04:34'),
+(211, NULL, 231, '132023230109', 'WONG', 'SEAN ANDRIE', 'JAÑA', 'M', '2017-12-15', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'LAPU-LAPU POB. (BGY. 8)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'JAÑA,MIKKI,GASTA,', 'WONG, ROBERT SALIBAY', NULL, NULL, NULL, '2024-11-24 02:04:34'),
+(212, NULL, 232, '501553230018', 'ZOILO', 'ELDZHOOD', 'BACLAY', 'M', '2018-05-02', 0, 'Cebuano/Kana/Sinugboanong Bini', NULL, 'Christianity', NULL, 'BAAN KM 3', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'BACLAY,MARIE GRACE,NACAR,', 'ZOILO, ELDOVRELE FUENTES', NULL, NULL, NULL, '2024-11-24 02:04:34'),
+(213, NULL, 233, '132023230231', 'CAMPOS', 'REE ANN GRACE', 'SUAREZ', 'F', '2017-12-09', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BADING POB. (BGY. 22)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'SUAREZ,ANVIC GRACE,ALBORES,', 'CAMPOS, REEDICK JOHN PAUMIG', NULL, NULL, NULL, '2024-11-24 02:04:34'),
+(214, NULL, 234, '132023230028', 'CANU-OG', 'ZAYEEN FAYE', 'RAMOS', 'F', '2018-05-31', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'LIBERTAD', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'RAMOS,CRIZALYN,CABALLES,', 'CANU-OG, REY BATIQUIN', NULL, NULL, NULL, '2024-11-24 02:04:35'),
+(215, NULL, 235, '132023230194', 'CORBES', 'MAJA SOPHIA', 'ALENYABON', 'F', '2018-04-20', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BADING POB. (BGY. 22)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'ALENYABON,JANETH,R,', 'CORBES, MARLON J', NULL, NULL, NULL, '2024-11-24 02:04:35'),
+(216, NULL, 236, '132023230201', 'DEGAMON', 'ROSELYN', 'FEDILIS', 'F', '2012-11-01', 0, 'Sinurigaonon', NULL, 'Christianity', NULL, 'BAAN KM 3', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'FEDILIS,ROSALINA,REÑUS,', 'DEGAMON, ARCADIO VILLARONZA JR', NULL, NULL, NULL, '2024-11-24 02:04:35'),
+(217, NULL, 237, '132023230137', 'EGAY', 'JHIELIANNE', 'LASWE', 'F', '2017-11-27', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BUHANGIN POB. (BGY. 19)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'LASWE,JACQUELOU,QUERIE-QUERIE,', 'EGAY, ELONUF RANA', NULL, NULL, NULL, '2024-11-24 02:04:35'),
+(218, NULL, 238, '132123230004', 'GALSIM', 'CARRA JANINE', 'MUCA', 'F', '2018-10-19', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BANCASI', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'MUCA,REJEAN,LINGA-ON,', 'GALSIM, CARLO FLORIDA', NULL, NULL, NULL, '2024-11-24 02:04:35'),
+(219, NULL, 239, '132023230214', 'KHAN', 'HAIFA', 'BURGOS', 'F', '2018-02-23', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Islam', NULL, 'VILLA KANANGA', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'BURGOS,MARITES,SAGON,', 'KHAN, MOHAMMED TABREZ', NULL, NULL, NULL, '2024-11-24 02:04:35'),
+(220, NULL, 240, '212502230090', 'LASTIMOSA', 'CELESTINE JHIME', 'CAGAPE', 'F', '2018-06-18', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BONBON', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'CAGAPE,DIMEMHOR,ARELLANO,', 'LASTIMOSA, JACOB TRILLO', NULL, NULL, NULL, '2024-11-24 02:04:35'),
+(221, NULL, 241, '132023230216', 'LEGASPI', 'JULIA OFELIA', 'RUBIO', 'F', '2018-02-10', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'GOLDEN RIBBON POB. (BGY. 2)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'RUBIO,LEAH MAE,CALANG,', 'LEGASPI, JOEFFER ALINGASA', NULL, NULL, NULL, '2024-11-24 02:04:35'),
+(222, NULL, 242, '132023230034', 'PULIDO', 'SOFIA JADE', 'LARIOSA', 'F', '2017-11-10', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Buddhism', NULL, 'DOONGAN', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'LARIOSA,GAY AMOR,ERNO,', 'PULIDO, JOHN CARLO GABRIEL', NULL, NULL, NULL, '2024-11-24 02:04:36'),
+(223, NULL, 243, '212502230146', 'SAGON', 'ALEXANDRA LOUISE', 'ELUMBA', 'F', '2017-12-18', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'AGUSAN PEQUEÃ‘O', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'ELUMBA,LUCYMAR,ALBERIO,', 'SAGON, ARNEL ARAGON', NULL, NULL, NULL, '2024-11-24 02:04:36'),
+(224, NULL, 244, '132023230036', 'SALVAÑA', 'BLAKELY VEAN', '-', 'F', '2018-05-16', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'PORT POYOHON POB. (BGY. 17 - NEW ASIA)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'SALVAÑA,VIOL KIMBERLY CRIS,,', '', NULL, NULL, NULL, '2024-11-24 02:04:36'),
+(225, NULL, 245, '212502230033', 'VIDAL', 'HANNIYAH RAYN', 'ALBANO', 'F', '2018-02-12', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'GOLDEN RIBBON POB. (BGY. 2)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'ALBANO,HANNAH MAY,ALIGAM,', 'VIDAL, RAYNAN BAYABAYA', NULL, NULL, NULL, '2024-11-24 02:04:36'),
+(226, NULL, 246, '132023230227', 'CAMPOS', 'CHRIS DIRRECK', 'CASTILLO', 'M', '2018-03-23', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'ONG YIU POB. (BGY. 16)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'CASTILLO,MARY GRACE,ACOSTA,', 'CAMPOS, ENGELBERT LORENZO', NULL, NULL, NULL, '2024-11-24 02:04:36'),
+(227, NULL, 247, '132023230092', 'HILO', 'ART DANIEL', 'GAMIL', 'M', '2018-04-02', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'JOSE RIZAL POB. (BGY. 25)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'GAMIL,SHAMEN,SULAPAS,', 'HILO, ARTEMIO CASAS', NULL, NULL, NULL, '2024-11-24 02:04:36'),
+(228, NULL, 248, '212502230058', 'MARCIAL', 'KRISTOFF LYLE', 'ACERA', 'M', '2018-09-08', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'ANTONGALON', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'ACERA,CHRISTIAN MAE,TIMBAL,', 'MARCIAL, MAERC JOSEPH PATETE', NULL, NULL, NULL, '2024-11-24 02:04:36'),
+(229, NULL, 249, '132023230095', 'MERCADO', 'RXIAN ELIOT', 'ABARQUEZ', 'M', '2017-12-11', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BAAN KM 3', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'ABARQUEZ,ROCHE JANE,ANDRADE,', 'MERCADO, RALPH CHRISTIAN JULAO', NULL, NULL, NULL, '2024-11-24 02:04:36'),
+(230, NULL, 250, '501285230005', 'NAPIZA', 'LUKE ALEXANDER', 'RIVERA', 'M', '2018-09-06', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'MAON POB. (BGY. 1)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'RIVERA,SHIELA MAE,PEREZ,', 'NAPIZA, CHRISTIAN TORREGOSA', NULL, NULL, NULL, '2024-11-24 02:04:36'),
+(231, NULL, 251, '132023230004', 'PADEN', 'BRIX EDRIANE', 'QUINTANA', 'M', '2017-12-10', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'MAHOGANY POB. (BGY. 21)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'QUINTANA,JOY,BUSA,', 'PADEN, ARNEL AMOGUIS', NULL, NULL, NULL, '2024-11-24 02:04:37'),
+(232, NULL, 252, '132023230003', 'PADEN', 'HENARRY CLIENT', 'QUINTANA', 'M', '2017-12-10', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'MAHOGANY POB. (BGY. 21)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'QUINTANA,JOY,BUSA,', 'PADEN, ARNEL AMOGUIS', NULL, NULL, NULL, '2024-11-24 02:04:37'),
+(233, NULL, 253, '132023230280', 'PAGALAN', 'JAMES RAYCIAN', 'DURAN', 'M', '2018-01-28', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BADING POB. (BGY. 22)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'DURAN,NICHELLE SHANE,ALIM,', 'PAGALAN, RAYMART LEMOS', NULL, NULL, NULL, '2024-11-24 02:04:37'),
+(234, NULL, 254, '132023230273', 'PANTALEON', 'KIER CYAN', 'INCHOCO', 'M', '2017-11-07', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BANZA', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'INCHOCO,KIMBERLY,-,', 'PANTALEON, ROITER ENTEÑA', NULL, NULL, NULL, '2024-11-24 02:04:37'),
+(235, NULL, 255, '132023230244', 'PLAZA', 'CHRIS EVAN', 'OSIGAN', 'M', '2018-10-25', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'BADING POB. (BGY. 22)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'OSIGAN,RICHEL,FORTUN,', 'PLAZA, FRANCISCO FRANCISCO JR', NULL, NULL, NULL, '2024-11-24 02:04:37'),
+(236, NULL, 256, '132023230250', 'REYES', 'DANIEL', 'SALAS', 'M', '2018-03-19', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'DAGOHOY POB. (BGY. 7)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'SALAS,DIOSCORA,AMONCIO,', 'REYES, ARNEL LUSTERIO', NULL, NULL, NULL, '2024-11-24 02:04:37'),
+(237, NULL, 257, '212502230051', 'ROSALES', 'AIVANN JACOB', 'GABORNE', 'M', '2018-10-17', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'LAPU-LAPU POB. (BGY. 8)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'GABORNE,CHRISTINE,VILLARIAS,', 'ROSALES, ROMMEL OMBAO', NULL, NULL, NULL, '2024-11-24 02:04:37'),
+(238, NULL, 258, '132023230278', 'TALLEDO', 'RENZO', 'ARNAIZ', 'M', '2018-06-11', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'HOLY REDEEMER POB. (BGY. 23)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'ARNAIZ,ROBELEN,MONTON,', 'TALLEDO, REYMON LLAMAS', NULL, NULL, NULL, '2024-11-24 02:04:38'),
+(239, NULL, 259, '132023230253', 'UTAR', 'JAYDEE TYLER', 'BURDEOS', 'M', '2018-05-30', 0, 'Cebuano / Sinugbuanong Binisay', NULL, 'Christianity', NULL, 'MAON POB. (BGY. 1)', 'BUTUAN CITY (Capital)', 'AGUSAN DEL NORTE', 'BURDEOS,DEVINE GRACE,LAURITO,', '', NULL, NULL, NULL, '2024-11-24 02:04:38'),
+(242, NULL, 265, NULL, 'Ghaizar', 'Paarents', 'atara', 'M', '2024-11-30', 0, '', '', 'ISlam', 'No Data', 'No Data', 'No Data', 'No Data', NULL, NULL, NULL, NULL, '09277294457', '2024-11-30 10:49:43');
 
 -- --------------------------------------------------------
 
@@ -299,11 +357,11 @@ CREATE TABLE `roles` (
 --
 
 INSERT INTO `roles` (`role_id`, `role_name`, `permission_id`) VALUES
-(1, 'Zear Developer', '5,3,9,4,6,10,8,7,2,1'),
-(2, 'Faculty', '9,8,7'),
-(3, 'Learners', ''),
-(4, 'Registrar', '5,6,10,7'),
-(6, 'Parents', '');
+(1, 'Zear Developer', '5,3,9,4,6,10,8,7,12,2,1,13,11'),
+(2, 'Faculty', '9,8,7,12'),
+(3, 'Learners', '12,11'),
+(4, 'Registrar', '5,6,10,7,12'),
+(6, 'Parents', '12,13');
 
 -- --------------------------------------------------------
 
@@ -508,7 +566,7 @@ INSERT INTO `users` (`user_id`, `email`, `username`, `password`, `role_id`, `isA
 (2, 'zhie@zear.developer.com', 'admin', '$2y$10$Y3A7u1B6/Fchy.twJAypLOhLmD1/KCYjy/BGce2P5jUOKThSTXD3u', 1, 1, 0, NULL, '2024-11-03 03:22:39', '2024-11-20 12:18:34'),
 (219, 'christian mark.adtoon@zear_developer.com', 'vmw2HxCr', '$2y$10$sQx8lJhtwUilTIvVhVCBAemwlXQb8rRtVdlu1yXA8de8bnpBd7RDC', 2, 1, 0, NULL, '2024-11-24 02:04:33', '2024-11-24 03:48:11'),
 (220, 'jan lucas.amora@zear_developer.com', 'fDBzpz8c', '$2y$10$QNTd0cy75EpiODoDdFyviuih82YrF1FmD80lRyKDYyAqQPGpwx/0C', 3, 1, 0, NULL, '2024-11-24 02:04:33', '2024-11-24 02:04:33'),
-(221, 'eliakym.cabatingan@zear_developer.com', 'HaURETau', '$2y$10$GQgaCagLpuEFWIBTDEREYeY3B4ciH/E0vmhWMPotfBdv43mcDnUsu', 3, 1, 0, NULL, '2024-11-24 02:04:33', '2024-11-24 02:04:33'),
+(221, 'eliakym.cabatingan@zear_developer.com', 'cabatingan', '$2y$10$GQgaCagLpuEFWIBTDEREYeY3B4ciH/E0vmhWMPotfBdv43mcDnUsu', 3, 1, 0, NULL, '2024-11-24 02:04:33', '2024-11-28 05:52:59'),
 (222, 'akil mark.calo@zear_developer.com', 'tIymlxVq', '$2y$10$2TuU5S2T2qQRJlPx88ZGx.1cJGa/phYEUJMzJcDDuZY8aGNF3tf2S', 3, 1, 0, NULL, '2024-11-24 02:04:33', '2024-11-24 02:04:33'),
 (223, 'kaizzer jazz.ejandra@zear_developer.com', 'hV5Fzfr7', '$2y$10$cWTDoCsDhF6XlmOyRpzQA.uPoAe/8IxvUmvHRhcFlRQqiDc2bQN1e', 3, 1, 0, NULL, '2024-11-24 02:04:33', '2024-11-24 02:04:33'),
 (224, 'king riben.gumanit@zear_developer.com', 'rNzbrj0R', '$2y$10$C.XFNzvXPZsxzXrXKbIGV.yxz.SqplMn2n1LwDMY0Q1RZqAULnNm.', 3, 1, 0, NULL, '2024-11-24 02:04:33', '2024-11-24 02:04:33'),
@@ -547,7 +605,9 @@ INSERT INTO `users` (`user_id`, `email`, `username`, `password`, `role_id`, `isA
 (257, 'aivann jacob.rosales@zear_developer.com', 'KZZ5PZ7r', '$2y$10$4iaNc1Nu8fvF11UONoDj2.93DF0Xfy9152v4FJ1co3LfAgNMgiNKS', 3, 1, 0, NULL, '2024-11-24 02:04:37', '2024-11-24 02:04:37'),
 (258, 'renzo.talledo@zear_developer.com', '8kKkBXIo', '$2y$10$/H1qtCaYgRZDUL3wmV6rRewJHYCA4nVJ87reCxoN/k.AfnkrCTHai', 3, 1, 0, NULL, '2024-11-24 02:04:38', '2024-11-24 02:04:38'),
 (259, 'jaydee tyler.utar@zear_developer.com', 'nncg88FW', '$2y$10$0kRWfBy5zIuMujG1cDaQ8u3PcuJiELSz.fxAduWilpCqFwU7/swo6', 3, 1, 0, NULL, '2024-11-24 02:04:38', '2024-11-24 02:04:38'),
-(260, NULL, 'teacher', '$2y$10$QNMzGh05nj/ijafvDFrOi.CjVgeyCHddXwnbrz.raRH9QOeP536dG', 2, 1, 0, NULL, '2024-11-24 04:18:42', '2024-11-24 04:18:42');
+(260, NULL, 'teacher', '$2y$10$QNMzGh05nj/ijafvDFrOi.CjVgeyCHddXwnbrz.raRH9QOeP536dG', 2, 1, 0, NULL, '2024-11-24 04:18:42', '2024-11-24 04:18:42'),
+(261, NULL, 'registrar', '$2y$10$UQ8Yl1EIs7gfDHUejsFIx.twCH6LCpi2rR156aI8g0ox.WelRukQa', 4, 1, 0, NULL, '2024-11-30 00:56:28', '2024-11-30 00:56:28'),
+(265, 'paarents.ghaizar', 'parent', '$2y$10$giUEe9BRPLQ6HSOASqB4FewIWtXKAy8riQjZ7bfbXBkYVd3vfv1oS', 6, 1, 0, NULL, '2024-11-30 10:49:43', '2024-11-30 11:16:09');
 
 --
 -- Indexes for dumped tables
@@ -572,6 +632,13 @@ ALTER TABLE `attendance_records`
 --
 ALTER TABLE `campus_info`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `emoji`
+--
+ALTER TABLE `emoji`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `shortcode` (`shortcode`);
 
 --
 -- Indexes for table `enrollment_history`
@@ -600,6 +667,22 @@ ALTER TABLE `grade_records`
   ADD KEY `subject_id` (`subject_id`);
 
 --
+-- Indexes for table `messages`
+--
+ALTER TABLE `messages`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `sender_id` (`sender_id`),
+  ADD KEY `receiver_id` (`receiver_id`);
+
+--
+-- Indexes for table `message_emoji`
+--
+ALTER TABLE `message_emoji`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `message_id` (`message_id`),
+  ADD KEY `emoji_id` (`emoji_id`);
+
+--
 -- Indexes for table `permissions`
 --
 ALTER TABLE `permissions`
@@ -610,14 +693,16 @@ ALTER TABLE `permissions`
 -- Indexes for table `profiles`
 --
 ALTER TABLE `profiles`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `profile_id` (`profile_id`);
 
 --
 -- Indexes for table `roles`
 --
 ALTER TABLE `roles`
   ADD PRIMARY KEY (`role_id`),
-  ADD UNIQUE KEY `role_name` (`role_name`);
+  ADD UNIQUE KEY `role_name` (`role_name`),
+  ADD KEY `role_id` (`role_id`);
 
 --
 -- Indexes for table `sections`
@@ -638,7 +723,8 @@ ALTER TABLE `subjects`
 ALTER TABLE `users`
   ADD PRIMARY KEY (`user_id`),
   ADD UNIQUE KEY `username` (`username`),
-  ADD KEY `profile_id` (`profile_id`);
+  ADD KEY `profile_id` (`profile_id`),
+  ADD KEY `users_ibfk_1` (`role_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -654,13 +740,19 @@ ALTER TABLE `academic_year`
 -- AUTO_INCREMENT for table `attendance_records`
 --
 ALTER TABLE `attendance_records`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `campus_info`
 --
 ALTER TABLE `campus_info`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `emoji`
+--
+ALTER TABLE `emoji`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `enrollment_history`
@@ -678,19 +770,31 @@ ALTER TABLE `grade_level`
 -- AUTO_INCREMENT for table `grade_records`
 --
 ALTER TABLE `grade_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `messages`
+--
+ALTER TABLE `messages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `message_emoji`
+--
+ALTER TABLE `message_emoji`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `permissions`
 --
 ALTER TABLE `permissions`
-  MODIFY `permission_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `permission_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `profiles`
 --
 ALTER TABLE `profiles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=240;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=243;
 
 --
 -- AUTO_INCREMENT for table `roles`
@@ -714,7 +818,7 @@ ALTER TABLE `subjects`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=261;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=266;
 
 --
 -- Constraints for dumped tables
@@ -744,6 +848,20 @@ ALTER TABLE `grade_records`
   ADD CONSTRAINT `grade_records_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `grade_records_ibfk_2` FOREIGN KEY (`eh_id`) REFERENCES `enrollment_history` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `grade_records_ibfk_3` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `messages`
+--
+ALTER TABLE `messages`
+  ADD CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`sender_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `message_emoji`
+--
+ALTER TABLE `message_emoji`
+  ADD CONSTRAINT `message_emoji_ibfk_1` FOREIGN KEY (`message_id`) REFERENCES `messages` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `message_emoji_ibfk_2` FOREIGN KEY (`emoji_id`) REFERENCES `emoji` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `users`

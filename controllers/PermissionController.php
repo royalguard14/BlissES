@@ -28,7 +28,7 @@ class PermissionController extends BaseController {
             $stmt->bindParam(':permission_name', $permission_name, PDO::PARAM_STR);
             if ($stmt->execute()) {
             // Redirect after successful creation
-                header("Location: /schoolsystem/permissions");
+                header("Location: /BlissES/permissions");
                 exit();
             } else {
                 echo "Error: Could not create permissions.";
@@ -45,7 +45,7 @@ class PermissionController extends BaseController {
             $stmt->bindParam(':permission_name', $permission_name, PDO::PARAM_STR);
             $stmt->bindParam(':permission_id', $permission_id, PDO::PARAM_INT);
             if ($stmt->execute()) {
-                        header("Location: /schoolsystem/permissions"); // Redirect to roles page after update
+                        header("Location: /BlissES/permissions"); // Redirect to roles page after update
                         exit();
                     } else {
                         echo "Error: Could not update role.";
@@ -59,7 +59,7 @@ class PermissionController extends BaseController {
                 $stmt = $this->db->prepare("DELETE FROM permissions WHERE permission_id = :permission_id");
                 $stmt->bindParam(':permission_id', $permission_id, PDO::PARAM_INT);
                 if ($stmt->execute()) {
-                    header("Location: /schoolsystem/permissions");
+                    header("Location: /BlissES/permissions");
                     exit();
                 } else {
                     echo "Error: Could not delete permission.";

@@ -107,7 +107,7 @@ include 'views/master.php';
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <form action="/schoolsystem/roles/update" method="POST">
+      <form action="/BlissES/roles/update" method="POST">
         <div class="modal-body">
           <input type="hidden" id="modal-role-id" name="role_id">
           <div class="form-group">

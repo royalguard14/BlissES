@@ -1,1 +1,2 @@
-"# BlissES" 
+php.ini
+extension=gd

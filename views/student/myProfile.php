@@ -8,7 +8,7 @@ $pageTitle = 'Personal Information';
       <div class="card-body box-profile">
         <div class="text-center">
           <img class="profile-user-img img-fluid img-circle"
-          src="<?php echo !empty($myInfo['photo_path']) ? $myInfo['photo_path'] : '/SchoolSystem/assets/img/default-profile.png'; ?>"
+          src="<?php echo !empty($myInfo['photo_path']) ? $myInfo['photo_path'] : '/BlissES/assets/img/default-profile.png'; ?>"
           alt="User profile picture"
           style="width: 128px; height: 128px;">
       </div>
@@ -74,59 +74,71 @@ $pageTitle = 'Personal Information';
   <div class="card-body">
     <div class="tab-content">
       <div class="active tab-pane" id="activity">
-        <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
-            <tr>
-                <th rowspan="2" style="text-align: center;">Subject</th>
-                <th colspan="4" style="text-align: center;">Grades</th>
-                <th rowspan="2" style="text-align: center;">Average</th>
-            </tr>
-            <tr>
-                <th style="text-align: center;">1st Grading</th>
-                <th style="text-align: center;">2nd Grading</th>
-                <th style="text-align: center;">3rd Grading</th>
-                <th style="text-align: center;">4th Grading</th>
-            </tr>
+<table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+    <tr>
+        <th rowspan="2" style="text-align: center;">Subject</th>
+        <th colspan="4" style="text-align: center;">Grades</th>
+        <th rowspan="2" style="text-align: center;">Average</th>
+    </tr>
+    <tr>
+        <th style="text-align: center;">1st Grading</th>
+        <th style="text-align: center;">2nd Grading</th>
+        <th style="text-align: center;">3rd Grading</th>
+        <th style="text-align: center;">4th Grading</th>
+    </tr>
+    <?php 
+    $totalGrades = 0;
+    $completedSubjects = 0; // Counter for subjects with complete grades
+
+    foreach ($allSubjectInGrade as $subject): 
+        $grades = [
+            '1st Grading' => isset($gradeMap[$subject['subject_id']][1]) ? $gradeMap[$subject['subject_id']][1] : 'No Grade',
+            '2nd Grading' => isset($gradeMap[$subject['subject_id']][2]) ? $gradeMap[$subject['subject_id']][2] : 'No Grade',
+            '3rd Grading' => isset($gradeMap[$subject['subject_id']][3]) ? $gradeMap[$subject['subject_id']][3] : 'No Grade',
+            '4th Grading' => isset($gradeMap[$subject['subject_id']][4]) ? $gradeMap[$subject['subject_id']][4] : 'No Grade'
+        ];
+
+        // Check if all grades are numeric
+        $isComplete = is_numeric($grades['1st Grading']) &&
+                      is_numeric($grades['2nd Grading']) &&
+                      is_numeric($grades['3rd Grading']) &&
+                      is_numeric($grades['4th Grading']);
+
+        $averageGrade = $isComplete 
+            ? (array_sum($grades) / 4) 
+            : 'Incomplete';
+
+        ?>
+        <tr>
+            <td><?php echo $subject['subject_name']; ?></td>
+            <td style="text-align: center;"><?php echo $grades['1st Grading']; ?></td>
+            <td style="text-align: center;"><?php echo $grades['2nd Grading']; ?></td>
+            <td style="text-align: center;"><?php echo $grades['3rd Grading']; ?></td>
+            <td style="text-align: center;"><?php echo $grades['4th Grading']; ?></td>
+            <td style="text-align: center;"><?php echo is_numeric($averageGrade) ? number_format($averageGrade, 2) : $averageGrade; ?></td>
+        </tr>
+        <?php 
+        if ($isComplete) {
+            $totalGrades += $averageGrade;
+            $completedSubjects++;
+        }
+    endforeach; 
+    ?>
+    <tr>
+        <td colspan="5" style="text-align: right;"><strong>Overall Average</strong></td>
+        <td style="text-align: center;">
             <?php 
-            $totalGrades = 0;
-            $totalSubjects = count($allSubjectInGrade);
-            foreach ($allSubjectInGrade as $subject): 
-                $grades = [
-                    '1st Grading' => isset($gradeMap[$subject['subject_id']][1]) ? $gradeMap[$subject['subject_id']][1] : 'No Grade',
-                    '2nd Grading' => isset($gradeMap[$subject['subject_id']][2]) ? $gradeMap[$subject['subject_id']][2] : 'No Grade',
-                    '3rd Grading' => isset($gradeMap[$subject['subject_id']][3]) ? $gradeMap[$subject['subject_id']][3] : 'No Grade',
-                    '4th Grading' => isset($gradeMap[$subject['subject_id']][4]) ? $gradeMap[$subject['subject_id']][4] : 'No Grade'
-                ];
-                $numericGrades = array_filter($grades, 'is_numeric');
-                $averageGrade = (count($numericGrades) > 0) ? array_sum($numericGrades) / count($numericGrades) : 'No Grade';
-                ?>
-                <tr>
-                    <td><?php echo $subject['subject_name']; ?></td>
-                    <td style="text-align: center;"><?php echo $grades['1st Grading']; ?></td>
-                    <td style="text-align: center;"><?php echo $grades['2nd Grading']; ?></td>
-                    <td style="text-align: center;"><?php echo $grades['3rd Grading']; ?></td>
-                    <td style="text-align: center;"><?php echo $grades['4th Grading']; ?></td>
-                    <td style="text-align: center;"><?php echo is_numeric($averageGrade) ? number_format($averageGrade, 2) : $averageGrade; ?></td>
-                </tr>
-                <?php 
-                if (is_numeric($averageGrade)) {
-                    $totalGrades += $averageGrade;
-                }
-            endforeach; 
+            if ($completedSubjects > 0) {
+                $overallAverage = $totalGrades / $completedSubjects;
+                echo number_format($overallAverage, 2);
+            } else {
+                echo 'Incomplete Grades';
+            }
             ?>
-            <tr>
-                <td colspan="5" style="text-align: right;"><strong>Overall Average</strong></td>
-                <td style="text-align: center;">
-                    <?php 
-                    if ($totalSubjects > 0) {
-                        $overallAverage = $totalGrades / $totalSubjects;
-                        echo number_format($overallAverage, 2);
-                    } else {
-                        echo 'No Grades Available';
-                    }
-                    ?>
-                </td>
-            </tr>
-        </table>
+        </td>
+    </tr>
+</table>
+
     </div>
     <div class="tab-pane" id="timeline">
         <div class="timeline timeline-inverse">

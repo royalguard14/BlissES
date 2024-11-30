@@ -91,7 +91,7 @@ include 'views/master.php';
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <form action="/schoolsystem/permissions/update" method="POST">
+      <form action="/BlissES/permissions/update" method="POST">
         <div class="modal-body">
           <input type="hidden" id="modal-permission-id" name="permission_id">
           <div class="form-group">
