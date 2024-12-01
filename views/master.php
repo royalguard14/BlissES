@@ -17,7 +17,7 @@ if (!isset($_SESSION['log_in']) || !$_SESSION['log_in']) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Zear Developer</title>
+  <title><?= $this->title ?></title>
 
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -53,6 +53,55 @@ if (!isset($_SESSION['log_in']) || !$_SESSION['log_in']) {
 
 
 
+<style type="text/css">
+  .drawer {
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 300px;
+    background: #fff;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+    transform: translateX(100%);
+    transition: transform 0.3s;
+    padding: 1rem !important;
+    z-index: 9999; /* Ensure the drawer is in front of all other elements */
+  }
+  .drawer.open {
+    transform: translateX(0);
+  }
+  .chat-windows {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9998; /* Make sure chat windows are below the drawer */
+  }
+  .direct-chat {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #ddd;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  }
+  .input-group input {
+    border-radius: 20px;
+  }
+  .input-group-append button {
+    border-radius: 20px;
+    background-color: #007bff;
+    color: white;
+  }
+</style>
+
+
+
+
+
+
+
+
 </head>
 
 
@@ -77,7 +126,7 @@ if (!isset($_SESSION['log_in']) || !$_SESSION['log_in']) {
         <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
       </li>
       <li class="nav-item d-none d-sm-inline-block">
-        <a href="profile" class="nav-link">Profile</a>
+        <a href="profile" class="nav-link">Profile </a>
       </li>
 
     </ul>
@@ -85,58 +134,15 @@ if (!isset($_SESSION['log_in']) || !$_SESSION['log_in']) {
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto">
       <!-- Navbar Search -->
-      <li class="nav-item">
-        <a class="nav-link" data-widget="navbar-search" href="#" role="button">
-          <i class="fas fa-search"></i>
-        </a>
-        <div class="navbar-search-block">
-          <form class="form-inline">
-            <div class="input-group input-group-sm">
-              <input class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search">
-              <div class="input-group-append">
-                <button class="btn btn-navbar" type="submit">
-                  <i class="fas fa-search"></i>
-                </button>
-                <button class="btn btn-navbar" type="button" data-widget="navbar-search">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </li>
+  
 
       <!-- Messages Dropdown Menu -->
       <li class="nav-item dropdown">
-        <a class="nav-link" data-toggle="dropdown" href="#">
+        <a class="nav-link" data-toggle="dropdown" href="#" id="open-drawer">
           <i class="far fa-comments"></i>
-          <span class="badge badge-danger navbar-badge">#</span>
-        </a>
-        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-  
-
-            <!-- Message Start -->
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item">
-          
-            <div class="media">
-              <img src="assets/img/user8-128x128.jpg" alt="User Avatar" class="img-size-50 img-circle mr-3">
-              <div class="media-body">
-                <h3 class="dropdown-item-title">
-                  John Pierce
-                  <span class="float-right text-sm text-muted"><i class="fas fa-star"></i></span>
-                </h3>
-                <p class="text-sm">I got your message bro</p>
-                <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> 4 Hours Ago</p>
-              </div>
-            </div>
-          </a>
-                      <!-- Message End -->
       
-     
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item dropdown-footer">See All Messages</a>
-        </div>
+        </a>
+
       </li>
       
       <li class="nav-item">
@@ -144,6 +150,9 @@ if (!isset($_SESSION['log_in']) || !$_SESSION['log_in']) {
           <i class="fas fa-expand-arrows-alt"></i>
         </a>
       </li>
+
+
+
 
 
       <li class="nav-item d-none d-sm-inline-block">
@@ -163,7 +172,7 @@ if (!isset($_SESSION['log_in']) || !$_SESSION['log_in']) {
     <!-- Brand Logo -->
     <a href="index3.html" class="brand-link">
       <img src="assets/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-      <span class="brand-text font-weight-light">AdminLTE 3</span>
+      <span class="brand-text font-weight-light" style="font-size:1rem"><?= $this->title ?></span>
     </a>
 
     <!-- Sidebar -->
@@ -174,7 +183,8 @@ if (!isset($_SESSION['log_in']) || !$_SESSION['log_in']) {
           <img src="assets/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
         </div>
         <div class="info">
-          <a href="#" class="d-block">Alexander Pierce</a>
+       <a href="#" class="d-block"><?= isset($this->name) ? $this->name : 'Default Name' ?></a>
+
         </div>
       </div>
 
@@ -307,5 +317,418 @@ if (!isset($_SESSION['log_in']) || !$_SESSION['log_in']) {
       "responsive": true,
     });
 </script>
+
+
+
+
+ <template id="chat-window-template">
+    <div class="col-md-3">
+      <!-- DIRECT CHAT PRIMARY -->
+      <div class="card card-primary card-outline direct-chat direct-chat-primary">
+        <div class="card-header">
+          <h3 class="card-title"></h3>
+          <div class="card-tools">
+            <!-- <span title="3 New Messages" class="badge bg-primary">3</span> -->
+            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+              <i class="fas fa-minus"></i>
+            </button>
+            <button type="button" class="btn btn-tool close-chat" title="Close Chat">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <!-- /.card-header -->
+        <div class="card-body">
+          <!-- Conversations will be dynamically added here -->
+          <div class="direct-chat-messages">
+            <!-- Dynamic chat messages loop -->
+          </div>
+          <!--/.direct-chat-messages-->
+        </div>
+        <!-- /.card-body -->
+        <div class="card-footer">
+          <form method="POST" action="#" class="chat-form" id="message-form">
+            <div class="input-group">
+              <input type="hidden" name="receiver_id" class="receiver-id">
+              <input type="text" name="message" class="chat-input form-control" placeholder="Type Message ..." >
+              <span class="input-group-append">
+                <button type="submit" class="btn btn-primary">Send</button>
+              </span>
+            </div>
+          </form>
+        </div>
+        <!-- /.card-footer-->
+      </div>
+      <!--/.direct-chat -->
+    </div>
+    <!-- /.col -->
+  </template>
+  <!-- Drawer for Classmates/Teachers -->
+  <div id="user-drawer" class="drawer control-sidebar-content">
+    <div class="drawer-header">
+     
+      <div class="row">
+
+
+<div class="col-6"> <h5>Contact List</h5></div>
+<div class="col-6"> <button id="close-drawer" class="close-btn">X</button></div>
+
+
+        
+     
+      </div>
+
+
+
+
+
+
+
+
+    </div>
+    <div class="drawer-body">
+
+    </div>
+  </div>
+  <!-- Pop-up Chat Windows -->
+  <div id="chat-windows" class="chat-windows">
+    <!-- Dynamically populated chat windows -->
+  </div>
+  <script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+      const drawer = document.getElementById('user-drawer');
+      const openDrawerBtn = document.getElementById('open-drawer');
+      const closeDrawerBtn = document.getElementById('close-drawer');
+      const userList = document.getElementById('user-list');
+       const adviserList = document.getElementById('teacher-list');
+      const chatWindows = document.getElementById('chat-windows');
+      const chatWindowTemplate = document.getElementById('chat-window-template');
+  // Toggle drawer and fetch data
+      openDrawerBtn.addEventListener('click', () => {
+        drawer.classList.add('open');
+    fetchContacts(); // Fetch the list of available contacts
+  });
+      closeDrawerBtn.addEventListener('click', () => drawer.classList.remove('open'));
+  // Fetch user list using $.ajax
+function fetchContacts() {
+    $.ajax({
+        url: 'fetch-chat-available', // Replace with your server endpoint
+        method: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            // Clear existing content
+            $('#teacher-list').empty();
+            $('#user-list').empty();
+
+            // Remove sections to ensure they are recreated only when necessary
+            $('#adviser-section').remove();
+            $('#classmate-section').remove();
+            $('#parent-section').remove();
+
+            // Handle adviser data
+            if (data.adviser) {
+                const adviserSection = `
+                    <div id="adviser-section">
+                        <h5>My Adviser</h5>
+                        <ul id="teacher-list"></ul>
+                    </div>`;
+                $(adviserSection).appendTo('.drawer-body');
+
+                const adviserItem = document.createElement('li');
+                adviserItem.textContent = `Adviser: ${data.adviser.name}`;
+                adviserItem.dataset.userId = data.adviser.id; // Store the adviser's ID
+                adviserItem.addEventListener('click', () => openChatWindow(data.adviser)); // Add click event
+                $('#teacher-list').append(adviserItem);
+            }
+
+            // Handle classmates data
+            if (data.classmates && data.classmates.length > 0) {
+                const classmateSection = `
+                    <div id="classmate-section">
+                        <h5>My Classmates</h5>
+                        <ul id="user-list"></ul>
+                    </div>`;
+                $(classmateSection).appendTo('.drawer-body');
+
+                data.classmates.forEach(user => {
+                    const li = document.createElement('li');
+                    li.textContent = user.name; // Display the user's name
+                    li.dataset.userId = user.id; // Store the user's ID
+                    li.addEventListener('click', () => openChatWindow(user)); // Add click event
+                    $('#user-list').append(li); // Append to classmates list
+                });
+            }
+
+
+                        // Handle classmates data
+            if (data.adviser_class && data.adviser_class.length > 0) {
+                const AdviserSection = `
+                    <div id="classmate-section">
+                        <h5>My Advisory Class</h5>
+                        <ul id="user-list"></ul>
+                    </div>`;
+                $(AdviserSection).appendTo('.drawer-body');
+
+
+                data.adviser_class.forEach(user => {
+                    const li = document.createElement('li');
+                    li.textContent = user.name; // Display the user's name
+                    li.dataset.userId = user.id; // Store the user's ID
+                    li.addEventListener('click', () => openChatWindow(user)); // Add click event
+                    $('#user-list').append(li); // Append to classmates list
+                });
+            }
+
+            // Handle parents data
+            if (data.parents && data.parents.length > 0) {
+                const parentSection = `
+                    <div id="parent-section">
+                        <h5>Parents</h5>
+                        <ul id="parent-list"></ul>
+                    </div>`;
+                $(parentSection).appendTo('.drawer-body');
+
+                data.parents.forEach(parent => {
+                    const li = document.createElement('li');
+                    li.textContent = parent.name; // Display parent's name
+                    li.dataset.userId = parent.id; // Store parent's ID
+                    li.addEventListener('click', () => openChatWindow(parent)); // Add click event
+                    $('#parent-list').append(li); // Append to parents list
+                });
+            }
+
+            // Show message if no data for any section
+            if (!data.adviser && (!data.classmates || data.classmates.length === 0) && (!data.parents || data.parents.length === 0) && (!data.adviser_class || data.adviser_class.length === 0)) {
+                const noDataMessage = `<p>No contacts available</p>`;
+                $('.drawer-body').append(noDataMessage);
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error fetching contacts:', error);
+        }
+    });
+}
+
+
+
+
+function openChatWindow(user) {
+    drawer.classList.remove('open'); // Close the drawer
+    let chatWindow = document.querySelector(`.direct-chat[data-user-id="${user.id}"]`);
+
+    // If chat window already open, use it
+    if (!chatWindow) {
+        chatWindow = chatWindowTemplate.content.cloneNode(true).querySelector('.direct-chat');
+        chatWindow.dataset.userId = user.id;
+        chatWindow.querySelector('.card-title').textContent = user.name; // Set the chat window title
+        chatWindow.querySelector('.receiver-id').value = user.id; // Set receiver ID for the form
+        chatWindow.querySelector('.close-chat').addEventListener('click', () => chatWindow.remove());
+        chatWindows.appendChild(chatWindow);
+    }
+
+    // Fetch previous chat messages
+    fetchChatMessages(user.id).then(messages => {
+        const messagesContainer = chatWindow.querySelector('.direct-chat-messages');
+        messagesContainer.innerHTML = ''; // Clear existing messages
+
+        if (messages.length > 0) {
+            messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('direct-chat-msg');
+                if (msg.sender_id === user.id) {
+                    messageDiv.classList.add('right'); // Align the message to the right if it's from the user
+                }
+                messageDiv.innerHTML = `
+                    <div class="direct-chat-infos clearfix">
+                        <span class="direct-chat-name float-${msg.sender_id === user.id ? 'right' : 'left'}">${msg.sender_name}</span>
+                        <span class="direct-chat-timestamp float-${msg.sender_id === user.id ? 'left' : 'right'}">${msg.timestamp}</span>
+                    </div>
+                    <img class="direct-chat-img" src="${msg.sender_avatar}" alt="Message User Image">
+                    <div class="direct-chat-text">${msg.message}</div>
+                `;
+                messagesContainer.appendChild(messageDiv);
+            });
+        } else {
+            const noMessages = document.createElement('div');
+            noMessages.classList.add('direct-chat-msg');
+            noMessages.textContent = 'No previous messages.';
+            messagesContainer.appendChild(noMessages);
+        }
+
+        // Automatically scroll to the bottom of the chatbox
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        // Start fetching new messages every second
+        startFetchingMessagesForChat(user.id);
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// Function to fetch new messages every second for an open chat window
+function fetchNewMessages(userId) {
+    $.ajax({
+        url: 'fetch-message',  // Replace with the correct endpoint
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ user_id: userId }),  // Send the user_id to fetch new messages
+        dataType: 'json',
+        success: function (data) {
+            const chatWindow = document.querySelector(`.direct-chat[data-user-id="${userId}"]`);
+            const messagesContainer = chatWindow.querySelector('.direct-chat-messages');
+
+            // Clear existing messages to avoid duplication
+            messagesContainer.innerHTML = '';
+
+            if (data.length > 0) {
+                data.forEach(msg => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('direct-chat-msg');
+                    if (msg.sender_id === userId) {
+                        messageDiv.classList.add('right'); // Align the message to the right if it's from the user
+                    }
+                    messageDiv.innerHTML = `
+                        <div class="direct-chat-infos clearfix">
+                            <span class="direct-chat-name float-${msg.sender_id === userId ? 'right' : 'left'}">${msg.sender_name}</span>
+                            <span class="direct-chat-timestamp float-${msg.sender_id === userId ? 'left' : 'right'}">${msg.timestamp}</span>
+                        </div>
+                        <img class="direct-chat-img" src="${msg.sender_avatar}" alt="Message User Image">
+                        <div class="direct-chat-text">${msg.message}</div>
+                    `;
+                    messagesContainer.appendChild(messageDiv);
+                });
+            } else {
+                const noMessages = document.createElement('div');
+                noMessages.classList.add('direct-chat-msg');
+                noMessages.textContent = 'No new messages.';
+                messagesContainer.appendChild(noMessages);
+            }
+
+            // Automatically scroll to the bottom of the chatbox
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        },
+        error: function (xhr, status, error) {
+            console.error('Error fetching messages:', error);
+        }
+    });
+}
+
+// Call the function every second for each open chat window
+function startFetchingMessagesForChat(userId) {
+    setInterval(function () {
+        fetchNewMessages(userId);
+    }, 1000); // 1000 milliseconds = 1 second
+}
+
+
+
+
+
+
+
+
+
+
+
+  // Fetch previous chat messages using $.ajax
+  function fetchChatMessages(userId) {
+    return new Promise((resolve, reject) => {
+      $.ajax({
+        url: 'fetch-message',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ user_id: userId }),
+        dataType: 'json',
+        success: function (data) {
+          resolve(data);
+        },
+        error: function (xhr, status, error) {
+          console.error('Error fetching messages:', error);
+          reject(error);
+        }
+      });
+    });
+  }
+
+
+  $(document).on("submit", "#message-form", function (e) {
+  e.preventDefault(); // Prevent the default form submission
+  // Retrieve the input values
+  const receiverId = $('.receiver-id').val(); // Get the value of the hidden input
+  const messageContent = $('.chat-input').val(); // Get the value of the message input
+  // Optional: Check if message content is empty before proceeding
+  if (!messageContent.trim()) {
+    alert("Message cannot be empty!");
+    return;
+  }
+  sendMessage(receiverId, messageContent);
+});
+
+
+
+  // Send a message using $.ajax
+  function sendMessage(userId, messageContent) {
+    const chatWindow = document.querySelector(`.direct-chat[data-user-id="${userId}"]`);
+    const messagesContainer = chatWindow.querySelector('.direct-chat-messages');
+    $.ajax({
+      url: 'sendMessage', // Replace with the correct endpoint for sending the message
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        user_id: userId,
+        message: messageContent,
+      }),
+      dataType: 'json',
+      success: function (data) {
+
+        if (data.status === 'success') {
+          const messageContent = $('.chat-input').val(); 
+          // Add the sent message to the chat window
+          const messageDiv = document.createElement('div');
+          messageDiv.classList.add('direct-chat-msg', 'right'); // Align the sent message to the right
+          messageDiv.innerHTML = `
+          <div class="direct-chat-infos clearfix">
+          <span class="direct-chat-name float-right">${data.sender_name}</span>
+          <span class="direct-chat-timestamp float-left">${data.timestamp}</span>
+          </div>
+          <img class="direct-chat-img" src="${data.sender_avatar}" alt="Message User Image">
+          <div class="direct-chat-text">${messageContent}</div>
+          `;
+          messagesContainer.appendChild(messageDiv);
+          messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to bottom
+          $('.chat-input').val('');
+        } else {
+          console.error('Error sending message');
+        }
+      },
+    });
+  }
+});
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </body>
 </html>

@@ -1,6 +1,6 @@
 <?php
 ob_start();
-$pageTitle = 'Roles Management'; 
+$pageTitle = 'Dashboard'; 
 ?>
 <div class="row">
   <section class="col-lg-5 connectedSortable">
@@ -9,11 +9,11 @@ $pageTitle = 'Roles Management';
         <h3 class="card-title">
           
 
-          Sales
+          
         </h3>
       </div>
       <div class="card-body">
-        content
+        
       </div>
     </div>
   </section>
@@ -23,11 +23,11 @@ $pageTitle = 'Roles Management';
         <h3 class="card-title">
           
 
-          Sales
+          
         </h3>
       </div>
       <div class="card-body">
-        content
+        
       </div>
     </div>
   </section>

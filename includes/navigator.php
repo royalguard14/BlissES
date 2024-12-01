@@ -15,54 +15,11 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
       </a>
     </li>
 
-<?php if ($_SESSION['role_id'] === 1 || $_SESSION['role_id'] === 3): ?>
-<li class="nav-header">Student Space</li>
-
-
-
-    <li class="nav-item">
-      <a href="learners-profile" class="nav-link <?= ($current_page == 'learners-profile') ? 'active' : ''; ?>">
-        <img class="icon-white" src="assets/img/icons/students.png" alt="Custom Icon" >
-        <p>Information</p>
-      </a>
-    </li>
-
-
-        <li class="nav-item">
-      <a href="learners-attendance" class="nav-link <?= ($current_page == 'learners-attendance') ? 'active' : ''; ?>">
-        <img class="icon-white" src="assets/img/icons/students.png" alt="Custom Icon" >
-        <p>Attendance Record</p>
-      </a>
-    </li>
-
-
-        <li class="nav-item">
-      <a href="learners-enrollment-history" class="nav-link <?= ($current_page == 'learners-enrollment-history') ? 'active' : ''; ?>">
-        <img class="icon-white" src="assets/img/icons/students.png" alt="Custom Icon" >
-        <p>Enrollemnt History</p>
-      </a>
-    </li>
-
-
-        <li class="nav-item">
-      <a href="learners-academic-history" class="nav-link <?= ($current_page == 'learners-academic-history') ? 'active' : ''; ?>">
-        <img class="icon-white" src="assets/img/icons/students.png" alt="Custom Icon" >
-        <p>Academic Record</p>
-      </a>
-    </li>
-
-        <li class="nav-item">
-      <a href="learners-storage" class="nav-link <?= ($current_page == 'learners-storage') ? 'active' : ''; ?>">
-        <img class="icon-white" src="assets/img/icons/students.png" alt="Custom Icon" >
-        <p>Storage</p>
-      </a>
-    </li>
-<?php endif; ?>
 
 
 
 
-    <?php if ($_SESSION['role_id'] === 1 || $_SESSION['role_id'] === 2): ?>
+    <?php if ($_SESSION['role_id'] === 2): ?>
 
     <li class="nav-header">Advisory Class</li>
     <li class="nav-item">
@@ -106,7 +63,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
 <?php endif; ?>
 
 
-   <?php if ($_SESSION['role_id'] === 1 || $_SESSION['role_id'] === 4): ?>
+   <?php if ($_SESSION['role_id'] === 4): ?>
     <li class="nav-header">Registrar</li>
     <li class="nav-item">
       <a href="teacher-list" class="nav-link <?= ($current_page == 'teacher-list') ? 'active' : ''; ?>">
@@ -126,6 +83,9 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
         <p>Parents's</p>
       </a>
     </li>
+
+
+    
     <?php endif; ?>
 
     <!-- Check if the user is an admin -->

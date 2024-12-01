@@ -11,36 +11,102 @@ class MsgManagementController extends BaseController {
 
 
 public function chatavailable() {
-    // Fetch available chat users from the database
-    try {
-        $myID = (int) $_SESSION['user_id'];
+    $roleid = $this->roleid;
+    $myID = (int) $_SESSION['user_id'];
 
+    try {
         // Get the current academic year
         $stmt = $this->db->prepare("SELECT function FROM campus_info WHERE id = 6");
         $stmt->execute();
         $campusInfoData = $stmt->fetch(PDO::FETCH_ASSOC);
         $presentSchoolYear = (int) $campusInfoData['function'];
 
-        // Get the user's enrollment details
-        $stmt = $this->db->prepare("
-            SELECT grade_level_id, section_id, adviser_id 
-            FROM enrollment_history 
-            WHERE user_id = :user_id AND academic_year_id = :academic_year_id
-        ");
-        $stmt->bindParam(':user_id', $myID, PDO::PARAM_INT);
-        $stmt->bindParam(':academic_year_id', $presentSchoolYear, PDO::PARAM_INT);
-        $stmt->execute();
-        $enrollmentInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($enrollmentInfo) {
-            $gradeLevelId = $enrollmentInfo['grade_level_id'];
-            $sectionId = $enrollmentInfo['section_id'];
-            $adviserId = $enrollmentInfo['adviser_id'];
-
-            // Fetch classmates
+        if ($roleid === 3) { // Learners
+            // Get the user's enrollment details
             $stmt = $this->db->prepare("
-                SELECT 
-                    u.user_id AS id, 
+                SELECT grade_level_id, section_id, adviser_id 
+                FROM enrollment_history 
+                WHERE user_id = :user_id AND academic_year_id = :academic_year_id
+            ");
+            $stmt->bindParam(':user_id', $myID, PDO::PARAM_INT);
+            $stmt->bindParam(':academic_year_id', $presentSchoolYear, PDO::PARAM_INT);
+            $stmt->execute();
+            $enrollmentInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($enrollmentInfo) {
+                $gradeLevelId = $enrollmentInfo['grade_level_id'];
+                $sectionId = $enrollmentInfo['section_id'];
+                $adviserId = $enrollmentInfo['adviser_id'];
+
+                // Fetch classmates
+                $stmt = $this->db->prepare("
+                    SELECT 
+                        u.user_id AS id, 
+                        CONCAT(
+                            COALESCE(p.last_name, ''), ', ', 
+                            COALESCE(p.first_name, ''), ' ',
+                            COALESCE(
+                                CASE 
+                                    WHEN p.middle_name IS NOT NULL AND p.middle_name != '' 
+                                    THEN CONCAT(SUBSTRING(p.middle_name, 1, 1), '.')
+                                    ELSE '' 
+                                END, '') 
+                        ) AS name
+                    FROM users u
+                    LEFT JOIN profiles p ON u.user_id = p.profile_id
+                    JOIN enrollment_history eh ON u.user_id = eh.user_id
+                    WHERE 
+                        eh.grade_level_id = :grade_level_id
+                        AND eh.section_id = :section_id
+                        AND eh.academic_year_id = :academic_year_id
+                        AND u.user_id != :user_id
+                        AND u.isActive = 1 
+                        AND u.isDelete = 0
+                    ORDER BY p.sex, p.last_name ASC
+                ");
+                $stmt->bindParam(':grade_level_id', $gradeLevelId, PDO::PARAM_INT);
+                $stmt->bindParam(':section_id', $sectionId, PDO::PARAM_INT);
+                $stmt->bindParam(':academic_year_id', $presentSchoolYear, PDO::PARAM_INT);
+                $stmt->bindParam(':user_id', $myID, PDO::PARAM_INT);
+                $stmt->execute();
+                $classmates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                // Fetch adviser
+                $stmt = $this->db->prepare("
+                    SELECT 
+                        u.user_id AS id, 
+                        CONCAT(
+                            COALESCE(p.last_name, 'N/A'), ', ', 
+                            COALESCE(p.first_name, 'N/A'), ' ',
+                            COALESCE(
+                                CASE 
+                                    WHEN p.middle_name IS NOT NULL AND p.middle_name != '' 
+                                    THEN CONCAT(SUBSTRING(p.middle_name, 1, 1), '.')
+                                    ELSE '' 
+                                END, '') 
+                        ) AS name
+                    FROM users u
+                    LEFT JOIN profiles p ON u.user_id = p.profile_id
+                    WHERE 
+                        u.user_id = :adviserId
+                ");
+                $stmt->bindParam(':adviserId', $adviserId, PDO::PARAM_INT);
+                $stmt->execute();
+                $adviser = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                echo json_encode([
+                    'classmates' => $classmates,
+                    'adviser' => $adviser,
+                    'parents' => [] // No parents data currently
+                ]);
+            } else {
+                echo json_encode(['error' => 'Enrollment data not found']);
+            }
+        } elseif ($roleid === 2) { // Teachers
+            // Fetch the adviser class for the current academic year
+            $stmt = $this->db->prepare("
+                SELECT
+                u.user_id AS id, 
                     CONCAT(
                         COALESCE(p.last_name, ''), ', ', 
                         COALESCE(p.first_name, ''), ' ',
@@ -55,70 +121,30 @@ public function chatavailable() {
                 LEFT JOIN profiles p ON u.user_id = p.profile_id
                 JOIN enrollment_history eh ON u.user_id = eh.user_id
                 WHERE 
-                    eh.grade_level_id = :grade_level_id
-                    AND eh.section_id = :section_id
+                    eh.adviser_id = :adviser_id
                     AND eh.academic_year_id = :academic_year_id
-                    AND u.user_id != :user_id
-                    AND u.isActive = 1 
-                    AND u.isDelete = 0
-                ORDER BY p.sex, p.last_name ASC
+                GROUP BY u.user_id
+                ORDER BY p.last_name ASC
             ");
-            $stmt->bindParam(':grade_level_id', $gradeLevelId, PDO::PARAM_INT);
-            $stmt->bindParam(':section_id', $sectionId, PDO::PARAM_INT);
+            $stmt->bindParam(':adviser_id', $myID, PDO::PARAM_INT);
             $stmt->bindParam(':academic_year_id', $presentSchoolYear, PDO::PARAM_INT);
-            $stmt->bindParam(':user_id', $myID, PDO::PARAM_INT);
             $stmt->execute();
-            $classmates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $adviserClass = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Fetch adviser
-            $stmt = $this->db->prepare("
-                SELECT 
-                    u.user_id AS id, 
-                    CONCAT(
-                        COALESCE(p.last_name, 'N/A'), ', ', 
-                        COALESCE(p.first_name, 'N/A'), ' ',
-                        COALESCE(
-                            CASE 
-                                WHEN p.middle_name IS NOT NULL AND p.middle_name != '' 
-                                THEN CONCAT(SUBSTRING(p.middle_name, 1, 1), '.')
-                                ELSE '' 
-                            END, '') 
-                    ) AS name
-                FROM users u
-                LEFT JOIN profiles p ON u.user_id = p.profile_id
-                WHERE 
-                    u.user_id = :adviserId
-            ");
-            $stmt->bindParam(':adviserId', $adviserId, PDO::PARAM_INT);
-            $stmt->execute();
-            $adviser = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            
-
-
-
-
-
-            $parents = [];
-
-            // Check if data exists
-            if (empty($classmates) && empty($adviser)) {
-                echo json_encode(['error' => 'No contacts available']);
+            if ($adviserClass) {
+                echo json_encode(['adviser_class' => $adviserClass]);
             } else {
-                echo json_encode([
-                    'classmates' => $classmates, 
-                    'adviser' => $adviser,
-                    'parents' => $parents
-                ]);
+                echo json_encode(['error' => 'No classes found for this teacher']);
             }
         } else {
-            echo json_encode(['error' => 'Enrollment data not found']);
+            echo json_encode(['error' => 'Invalid role']);
         }
     } catch (Exception $e) {
         echo json_encode(['error' => $e->getMessage()]);
     }
     exit();
 }
+
 
 
 

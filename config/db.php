@@ -2,7 +2,7 @@
 <?php
 // Database configuration
 $host = 'localhost';
-$dbname = 'school_system';
+$dbname = 'blissec';
 $username = 'root';
 $password = '';
 

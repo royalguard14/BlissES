@@ -234,6 +234,14 @@ public function adviserDashboard() {
     include 'views/dashboard/registrar_dashboard.php';
 }
 
+
+    private function parentDashboard() {
+      
+        include 'views/dashboard/parent_dashboard.php';
+    }
+
+
+
     private function defaultDashboard() {
       
         include 'views/dashboard/default_dashboard.php';
@@ -259,7 +267,10 @@ public function adviserDashboard() {
             case 4: //Registrar
             $this->registrarDashboard();
             break;
-            default://Parents
+                        case 6: //Parents
+            $this->parentDashboard();
+            break;
+            default://admin
             $this->defaultDashboard();
             break;
         }
