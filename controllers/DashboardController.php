@@ -225,7 +225,7 @@ public function adviserDashboard() {
 
    
     private function studentDashboard() {
-   
+      
         include 'views/dashboard/student_dashboard.php';
     }
 
@@ -235,7 +235,7 @@ public function adviserDashboard() {
 }
 
     private function defaultDashboard() {
-        echo "Welcome to the Default Dashboard!";
+      
         include 'views/dashboard/default_dashboard.php';
     }
 

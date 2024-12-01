@@ -3,31 +3,42 @@ ob_start();
 $pageTitle = 'Dashboard'; 
 ?>
 <div class="row">
+  <!-- Left Column -->
   <section class="col-lg-5 connectedSortable">
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">
-          
-
-          dash
+          Dashboard
         </h3>
       </div>
       <div class="card-body">
-        content
+        <!-- Dynamic content placeholder for the left column -->
+        <p>Welcome to your dashboard!</p>
       </div>
     </div>
   </section>
+
+  <!-- Right Column -->
   <section class="col-lg-7 connectedSortable">
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">
-          
-
           Sales
         </h3>
       </div>
       <div class="card-body">
-        content
+        <!-- Direct Chat Section -->
+
+          <div class="card-body">
+            
+
+          </div>
+
+          <!-- Chat Input -->
+          <div class="card-footer">
+
+          </div>
+        </div>
       </div>
     </div>
   </section>

@@ -97,6 +97,13 @@ $routes = [
      'parents-update' => ['controller' => 'RegistrarMngtController', 'action' => 'updateParentList'],
      'parents-family' => ['controller' => 'RegistrarMngtController', 'action' => 'familyParentList'],
 
+     'fetch-chat-available' => ['controller' => 'MsgManagementController', 'action' => 'chatavailable'],
+     'fetch-message' => ['controller' => 'MsgManagementController', 'action' => 'fetchmessage'],
+     
+     'sendMessage' => ['controller' => 'MsgManagementController', 'action' => 'sendMessage'],
+
+
+
     
     
 
