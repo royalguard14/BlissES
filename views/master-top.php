@@ -552,6 +552,6 @@ function startFetchingMessagesForChat(userId) {
   }
 });
 </script>
-
+<script src="assets/js/widget.js"></script>
 </body>
 </html>
