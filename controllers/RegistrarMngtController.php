@@ -755,6 +755,8 @@ public function updateStudent() {
     }
 }
 public function updateUser() {
+
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
         $user_id = (int) $_POST['user_id'];
         $role = (int) $_POST['role_id']; // Ensure role is an integer
@@ -843,6 +845,7 @@ public function updateUser() {
             // Execute query
         if ($stmt->execute()) {
             $redirectPath = ($role === 3) ? "/BlissES/students-list" : "/BlissES/teacher-list";
+   
             header("Location: $redirectPath");
             exit();
         } else {

@@ -12,6 +12,7 @@ class BaseController {
     protected $title;
     protected $devname;
     protected $system;
+    protected $acadsyear;
 
 
 
@@ -32,9 +33,19 @@ class BaseController {
 
 protected function websiteDetails(){
 
-  $this->title = "Bliss Elementary School";
-   $this->devname = "Zear Developer";
+$this->title = "Bliss Elementary School";
+$this->devname = "Zear Developer";
 $this->system = "Web-based Student Records Management System for Bliss Elementary School ";
+
+
+
+
+        $stmt = $this->db->prepare("SELECT function FROM campus_info WHERE id = 6");
+     
+        $stmt->execute();
+        $this->acadsyear = (int) $stmt->fetch(PDO::FETCH_ASSOC)['function'];
+
+
 
 }
 

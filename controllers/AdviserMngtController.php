@@ -5,6 +5,7 @@ class AdviserMngtController extends BaseController {
         parent::__construct($db, ['9','8','7']);  
     } 
     public function show() {
+
        $adviserId = $_SESSION['user_id'];
        try {
         $result = $this->getAdviserSectionAndGrade($adviserId);
@@ -37,6 +38,35 @@ class AdviserMngtController extends BaseController {
         $stmt->execute();
         $advisoryClass = $stmt->fetchAll(PDO::FETCH_ASSOC);
     // Include the view and pass the data
+
+
+        // Query to get unenrolled students
+        $stmt = $this->db->prepare("
+            SELECT 
+                COALESCE(p.lrn, 'No Data') AS lrn, 
+                CONCAT(
+                    COALESCE(p.last_name, ''), ', ',
+                    COALESCE(p.first_name, ''), ' ',
+                    COALESCE(
+                        CASE
+                        WHEN p.middle_name IS NOT NULL AND p.middle_name != '' 
+                        THEN CONCAT(SUBSTRING(p.middle_name, 1, 1), '.')
+                        ELSE ''
+                        END, 
+                        '') 
+                    ) AS fullname,
+                u.user_id, 
+                p.sex as gender
+            FROM users u
+            LEFT JOIN profiles p ON u.user_id = p.profile_id
+            LEFT JOIN enrollment_history eh ON eh.user_id = u.user_id AND eh.academic_year_id = :acads
+            WHERE u.role_id = 3 AND eh.user_id IS NULL
+        ");
+        $stmt->bindValue(':acads', $this->acadsyear, PDO::PARAM_INT);
+        $stmt->execute();
+        $unenrolledStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+     
 
 
     } catch (Exception $e) {

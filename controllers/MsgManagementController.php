@@ -149,77 +149,105 @@ public function chatavailable() {
 
 
 public function sendMessage() {
+    try {
+        $data = json_decode(file_get_contents('php://input'), true);
 
-        try {
-            $data = json_decode(file_get_contents('php://input'), true);
+        // Validate sender and receiver IDs
+        $sender_id = (int) $_SESSION['user_id'];
+        $receiver_id = isset($data['user_id']) ? (int) $data['user_id'] : null;
+        $content = isset($data['message']) ? trim($data['message']) : '';
 
-            // Validate sender and receiver IDs
-            $sender_id = (int) $_SESSION['user_id'];
-            $receiver_id = isset($data['user_id']) ? (int) $data['user_id'] : null;
-            $content = isset($data['message']) ? trim($data['message']) : '';
-
-            if (!$receiver_id || empty($content)) {
-                echo json_encode([
-                    'status' => 'error', 
-                    'message' => 'Invalid input. Ensure the message content and recipient ID are provided.'
-                ]);
-                return;
-            }
-
-            // Insert the message into the database
-            $stmt = $this->db->prepare("
-                INSERT INTO messages (sender_id, receiver_id, content, is_read, sent_at) 
-                VALUES (:sender_id, :receiver_id, :content, 0, NOW())
-            ");
-            $stmt->bindParam(':sender_id', $sender_id, PDO::PARAM_INT);
-            $stmt->bindParam(':receiver_id', $receiver_id, PDO::PARAM_INT);
-            $stmt->bindParam(':content', $content, PDO::PARAM_STR);
-
-            if ($stmt->execute()) {
-                // Fetch sender details
-                $stmt2 = $this->db->prepare("
-                    SELECT 
-                        CONCAT(COALESCE(p.last_name, ''), ', ', COALESCE(p.first_name, ''), ' ', 
-                            COALESCE(
-                                CASE 
-                                WHEN p.middle_name IS NOT NULL AND p.middle_name != '' 
-                                THEN CONCAT(SUBSTRING(p.middle_name, 1, 1), '.')
-                                ELSE '' 
-                                END, ''
-                            )
-                        ) AS sender_name,
-                        COALESCE(p.photo_path, 'assets/img/default-profile.png') AS sender_avatar
-                    FROM profiles p
-                    JOIN users u ON p.profile_id = u.user_id
-                    WHERE u.user_id = :sender_id
-                ");
-                $stmt2->bindParam(':sender_id', $sender_id, PDO::PARAM_INT);
-                $stmt2->execute();
-                $senderInfo = $stmt2->fetch(PDO::FETCH_ASSOC);
-
-                if ($senderInfo) {
-                    echo json_encode([
-                        'status' => 'success',
-                        'sender_name' => $senderInfo['sender_name'],
-                        'sender_avatar' => $senderInfo['sender_avatar'],
-                        'message' => $content,
-                        'timestamp' => date('Y-m-d H:i:s')
-                    ]);
-
-                } else {
-                    echo json_encode(['status' => 'error', 'message' => 'Sender details not found.']);
-                }
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Failed to send the message.']);
-            }
-        } catch (Exception $e) {
-            echo json_encode(['status' => 'error', 'message' => 'An error occurred: ' . $e->getMessage()]);
+        if (!$sender_id) {
+            echo json_encode(['status' => 'error', 'message' => 'Sender not logged in.']);
+            return;
         }
 
+        if (!$receiver_id || empty($content)) {
+            echo json_encode([
+                'status' => 'error', 
+                'message' => 'Invalid input. Ensure the message content and recipient ID are provided.'
+            ]);
+            return;
+        }
 
+        // Insert the message into the database
+        $stmt = $this->db->prepare("
+            INSERT INTO messages (sender_id, receiver_id, content, is_read, sent_at) 
+            VALUES (:sender_id, :receiver_id, :content, 0, NOW())
+        ");
+        $stmt->bindParam(':sender_id', $sender_id, PDO::PARAM_INT);
+        $stmt->bindParam(':receiver_id', $receiver_id, PDO::PARAM_INT);
+        $stmt->bindParam(':content', $content, PDO::PARAM_STR);
 
-                    exit();
+        if ($stmt->execute()) {
+            // Fetch sender details
+            $stmt2 = $this->db->prepare("
+                SELECT
+                    CONCAT(
+                        COALESCE(p.last_name, ''), ', ',
+                        COALESCE(p.first_name, ''), ' ', 
+                        COALESCE(
+                            CASE 
+                            WHEN p.middle_name IS NOT NULL AND p.middle_name != '' 
+                            THEN CONCAT(SUBSTRING(p.middle_name, 1, 1), '.')
+                            ELSE '' 
+                            END, ''
+                        )
+                    ) AS sender_name,
+                    COALESCE(p.photo_path, 'assets/img/default-profile.png') AS sender_avatar
+                FROM profiles p
+                JOIN users u ON u.user_id = p.profile_id
+                WHERE u.user_id = :sender_id
+            ");
+            $stmt2->bindParam(':sender_id', $sender_id, PDO::PARAM_INT);
 
+            if ($stmt2->execute()) {
+                $senderInfo = $stmt2->fetch(PDO::FETCH_ASSOC);
+
+                if (!$senderInfo) {
+                    // Create a dummy profile for the sender
+                    $dummyStmt = $this->db->prepare("
+                        INSERT INTO profiles (profile_id, last_name, first_name, middle_name, photo_path) 
+                        VALUES (:profile_id, 'Unknown', 'User', NULL, 'assets/img/default-profile.png')
+                    ");
+                    $dummyStmt->bindParam(':profile_id', $sender_id, PDO::PARAM_INT);
+                    if ($dummyStmt->execute()) {
+                        $senderInfo = [
+                            'sender_name' => 'User Unknown',
+                            'sender_avatar' => 'assets/img/default-profile.png'
+                        ];
+                    } else {
+                        echo json_encode([
+                            'status' => 'error',
+                            'message' => 'Failed to create a dummy profile for the sender.'
+                        ]);
+                        return;
+                    }
+                }
+
+                // Send the response
+                echo json_encode([
+                    'status' => 'success',
+                    'sender_name' => $senderInfo['sender_name'],
+                    'sender_avatar' => $senderInfo['sender_avatar'],
+                    'message' => $content,
+                    'timestamp' => date('Y-m-d H:i:s')
+                ]);
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Failed to execute sender details query.',
+                    'debug_error' => $stmt2->errorInfo()
+                ]);
+            }
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Failed to send the message.']);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => 'An error occurred: ' . $e->getMessage()]);
+    }
+
+    exit();
 }
 
 

@@ -179,7 +179,7 @@ function getInitials($string) {
           <?php $index = 1; ?>
           <?php foreach ($teachers as $data): ?>
             <tr>
-               <td style="text-align: center; vertical-align: middle;"><?php echo $index++; ?></td> 
+               <td style="text-align: center; vertical-align: middle;"><?php echo $index++ . "-".$data['user_id']; ?> </td> 
                <td style="text-align: center; vertical-align: middle;">
                 <?php 
                 echo htmlspecialchars(ucwords(
