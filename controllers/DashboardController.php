@@ -128,12 +128,17 @@ public function adviserDashboard() {
                 ) AS fullname,
                 p.birth_date
             FROM profiles p
-            WHERE MONTH(p.birth_date) = :current_month
+            LEFT JOIN
+            enrollment_history eh ON eh.user_id = p.profile_id
+            WHERE 
+            MONTH(p.birth_date) = :current_month
+            AND eh.adviser_id = :adviser_id
             ORDER BY p.birth_date DESC
         ");
         
         // Bind the current month value
         $stmt->bindValue(':current_month', $currentMonth, PDO::PARAM_INT);
+        $stmt->bindValue(':adviser_id', $adviserId, PDO::PARAM_INT);
         $stmt->execute();
 
         // Fetch the students with birthdays this month
@@ -229,10 +234,57 @@ public function adviserDashboard() {
         include 'views/dashboard/student_dashboard.php';
     }
 
-    private function registrarDashboard() {
-    echo "Welcome to the Registrar Dashboard!";
+private function registrarDashboard() {
+    $stmt = $this->db->prepare("
+        SELECT 
+            SUM(CASE WHEN u.role_id = 3 AND p.sex = 'M' THEN 1 ELSE 0 END) AS totalMale,
+            SUM(CASE WHEN u.role_id = 3 AND p.sex = 'F' THEN 1 ELSE 0 END) AS totalFemale,
+            SUM(CASE WHEN u.role_id = 2 THEN 1 ELSE 0 END) AS totalTeachers,
+            SUM(CASE WHEN u.role_id = 6 THEN 1 ELSE 0 END) AS totalParents
+        FROM users u
+        LEFT JOIN profiles p ON u.user_id = p.profile_id
+    ");
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $totalMale = $result['totalMale'];
+    $totalFemale = $result['totalFemale'];
+    $totalTeachers = $result['totalTeachers'];
+    $totalParents = $result['totalParents'];
+
+
+
+    $stmt = $this->db->prepare("
+ SELECT 
+    gl.level,
+    s.section_name AS section_name,
+    s.adviser_id,
+    CONCAT(p.first_name, ' ', p.last_name) AS adviser_name,
+    SUM(CASE WHEN pr.sex = 'M' THEN 1 ELSE 0 END) AS total_male,
+    SUM(CASE WHEN pr.sex = 'F' THEN 1 ELSE 0 END) AS total_female
+FROM 
+    grade_level gl
+LEFT JOIN sections s ON FIND_IN_SET(s.id, gl.section_ids)
+LEFT JOIN profiles p ON s.adviser_id = p.profile_id
+LEFT JOIN enrollment_history eh ON eh.section_id = s.id
+LEFT JOIN profiles pr ON eh.user_id = pr.profile_id
+GROUP BY 
+    gl.id, s.id
+ORDER BY 
+    gl.id, s.section_name;
+
+");
+$stmt->execute();
+$registrarSummary = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+
+#piegraph
+
+
     include 'views/dashboard/registrar_dashboard.php';
 }
+
 
 
     private function parentDashboard() {

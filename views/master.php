@@ -317,6 +317,8 @@ if (!isset($_SESSION['log_in']) || !$_SESSION['log_in']) {
       "autoWidth": false,
       "responsive": true,
     });
+
+
 </script>
 
 
