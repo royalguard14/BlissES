@@ -281,7 +281,7 @@ function summary(childId) {
             }
         },
         error: function() {
-            alert('Error occurred while fetching data.');
+            alert('No Data yet');
         }
     });
 }
