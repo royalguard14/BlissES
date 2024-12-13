@@ -87,6 +87,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
         </button>
         <div class="collapse navbar-collapse order-3" id="navbarCollapse">
           <!-- Left navbar links -->
+          <?php if ($this->roleid != 6):?>
           <ul class="navbar-nav">
   
             <li class="nav-item">
@@ -106,6 +107,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
               </ul>
             </li>
           </ul>
+        <?php endif ?>
           <!-- SEARCH FORM -->
         </div>
         <!-- Right navbar links -->

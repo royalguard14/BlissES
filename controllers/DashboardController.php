@@ -287,10 +287,179 @@ $registrarSummary = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
 
-    private function parentDashboard() {
-      
-        include 'views/dashboard/parent_dashboard.php';
+  private function parentDashboard() {
+    $user_id = $_SESSION['user_id'];
+
+    // Fetch role and assigned permissions
+    $stmt = $this->db->prepare("SELECT children FROM parent_children WHERE user_id = :user_id");
+    $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $childrem = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Ensure children field is not empty before processing
+    if (!empty($childrem['children'])) {
+        // Split the comma-separated list of child IDs into an array
+        $assigned_children = explode(',', $childrem['children']);
+
+        // Clean up the array: remove any empty values, ensure numeric values
+        $assigned_children = array_filter($assigned_children, 'is_numeric');
+        $assigned_children = array_map('intval', $assigned_children);
+
+        // If there are no valid children, exit early
+        if (empty($assigned_children)) {
+            // Handle no children assigned case (e.g., show message or return)
+            dd('No assigned children for this user.');
+            return;
+        }
+
+        // Convert array to a comma-separated string
+        $placeholders = implode(',', array_fill(0, count($assigned_children), '?'));
+
+        // Fetch all children (permissions) with role_id = 3
+        $stmt = $this->db->prepare("SELECT
+            u.user_id as id, 
+            CONCAT(
+                COALESCE(p.last_name, ''), ', ',
+                COALESCE(p.first_name, ''), ' ',
+                COALESCE(
+                    CASE
+                        WHEN p.middle_name IS NOT NULL AND p.middle_name != '' 
+                        THEN CONCAT(SUBSTRING(p.middle_name, 1, 1), '.')
+                        ELSE ''
+                    END, 
+                '') 
+            ) AS fullname
+            FROM profiles p
+            LEFT JOIN users u ON p.profile_id = u.user_id
+            WHERE u.user_id IN ($placeholders)
+            ORDER BY p.last_name ASC
+        ");
+
+        // Bind the values to the prepared statement (values for IN clause)
+        $stmt->execute($assigned_children);
+
+        $childrens = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    
+    } else {
+        // Handle the case where there are no assigned children
+        dd('No children assigned to this parent.');
     }
+
+    // Include the parent dashboard view
+    include 'views/dashboard/parent_dashboard.php';
+}
+
+
+
+
+public function attendancegrade() {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['child_id'])) {
+        $child_id = $_POST['child_id'];
+
+        // Fetch attendance records for the given child
+        $stmt = $this->db->prepare("SELECT
+                ar.id,
+                ar.user_id,
+                ar.date,
+                ar.status,
+                ar.remarks,
+                ar.eh_id,
+                CONCAT(
+                    COALESCE(p.last_name, ''), ', ',
+                    COALESCE(p.first_name, ''), ' ',
+                    COALESCE(
+                        CASE
+                            WHEN p.middle_name IS NOT NULL AND p.middle_name != '' 
+                            THEN CONCAT(SUBSTRING(p.middle_name, 1, 1), '.')
+                            ELSE ''
+                        END, 
+                    '') 
+                ) AS name
+            FROM attendance_records ar
+            LEFT JOIN profiles p ON ar.user_id = p.profile_id
+            WHERE ar.user_id = :child_id
+            ORDER BY ar.date DESC");
+        $stmt->bindParam(':child_id', $child_id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $attendance_records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Get the child's grade level
+        $stmt = $this->db->prepare("SELECT grade_level_id FROM enrollment_history WHERE id = :eh_id");
+        $stmt->bindValue(':eh_id', $attendance_records[0]['eh_id'], PDO::PARAM_INT);
+        $stmt->execute();
+        $childgradeLevel = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Get subjects for the child's grade level
+        $stmt = $this->db->prepare("SELECT s.id AS subject_id, s.name AS subject_name FROM subjects s
+            WHERE FIND_IN_SET(s.id, (
+                SELECT gl.subject_ids FROM grade_level gl WHERE gl.id = :grade_level
+            )) > 0");
+        $stmt->bindValue(':grade_level', $childgradeLevel['grade_level_id'], PDO::PARAM_INT);
+        $stmt->execute();
+        $allSubjectInGrade = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+
+        // Ensure that allSubjectInGrade is available
+        if (empty($allSubjectInGrade)) {
+            echo json_encode(['success' => false, 'message' => 'No subjects found for the child.']);
+            return;
+        }
+
+        $subjectIds = array_column($allSubjectInGrade, 'subject_id');
+
+        // Get grades for the subjects
+        $gradesStmt = $this->db->prepare("SELECT gr.user_id, gr.subject_id, gr.grade, gr.grading_id
+            FROM grade_records gr
+            WHERE gr.user_id = :user_id AND gr.grading_id IN (1, 2, 3, 4)
+            AND gr.subject_id IN (" . implode(',', array_map('intval', $subjectIds)) . ")");
+        $gradesStmt->bindValue(':user_id', $child_id, PDO::PARAM_INT);
+        $gradesStmt->execute();
+        $grades = $gradesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Organize grades by subject
+        $gradeMap = [];
+        foreach ($grades as $grade) {
+            $gradeMap[$grade['subject_id']][$grade['grading_id']] = $grade['grade'];
+        }
+
+
+
+
+        // Return the results as JSON with both attendance records and subjects (grades)
+        echo json_encode([
+            'success' => true,
+            'attendance_records' => $attendance_records,
+            'grades' => $gradeMap,
+            'subjects' => $allSubjectInGrade // Ensure subjects are included in the response
+        ]);
+
+// dd([
+//     'success' => true,
+//     'attendance_records' => $attendance_records,
+//     'grades' => $gradeMap,
+//     'subjects' => $allSubjectInGrade // Ensure subjects are included in the response
+// ]);
+
+
+    } else {
+        echo json_encode(['success' => false]);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

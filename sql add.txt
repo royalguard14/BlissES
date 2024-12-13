@@ -1,0 +1,6 @@
+CREATE TABLE parent_children (
+    id INT PRIMARY KEY,
+    user_id INT,
+    children VARCHAR(500),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);

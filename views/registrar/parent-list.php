@@ -12,6 +12,56 @@ function getInitials($string) {
   }
   return $initials;
 }
+
+
+
+
+
+
+
+// Function to display toast messages
+function displayToastMessage($session_key, $toast_class, $title) {
+    if (isset($_SESSION[$session_key])) {
+        $message = $_SESSION[$session_key];
+        unset($_SESSION[$session_key]);
+        echo "<script type='text/javascript'>
+        document.querySelector('.preloader').style.display = 'none';
+        document.addEventListener('DOMContentLoaded', function() {
+            $(document).Toasts('create', {
+                class: '$toast_class',
+                title: '$title',
+                autohide: true,
+                delay: 3000,
+                body: '" . addslashes($message) . "'
+            });
+        });
+        </script>";
+    }
+}
+
+// Check if 'error' session is set and call the function
+if (isset($_SESSION['error'])) {
+    displayToastMessage('error', 'bg-danger', 'Error');
+}
+
+// Check if 'info' session is set and call the function
+if (isset($_SESSION['info'])) {
+    displayToastMessage('info', 'bg-info', 'Information');
+}
+
+// Check if 'success' session is set and call the function
+if (isset($_SESSION['success'])) {
+    displayToastMessage('success', 'bg-success', 'Success');
+}
+
+
+
+
+
+
+
+
+
 ?>
 
 
@@ -126,10 +176,9 @@ function getInitials($string) {
 
 
 
-<div class="row d-flex justify-content-center">
-    <div class="col-12 col-md-6 d-flex">
+<div class="btn-group">
 
-              <button type="button" class="btn btn-block btn-outline-warning btn-xs update-teacher-btn" 
+              <button type="button" class="btn btn-block btn-outline-warning update-teacher-btn m-1" 
               data-teacher='<?php echo json_encode([
                 "user_id" => $data['user_id'],
                 "first_name" => $data['first_name'],
@@ -150,19 +199,28 @@ function getInitials($string) {
                 data-toggle="modal" data-target="#updateTeacherModal">
                 Update
               </button>
-    </div>
-        <div class="col-12 col-md-6 d-flex">
+
           
  
              <form action="/BlissES/users/delete" method="POST" style="display:inline;">
               <input type="hidden" name="user_id" value="<?php echo $data['user_id']; ?>">
               <input type="hidden" name="paths" value="parents-list">
-              <button type="submit" class="btn btn-block btn-outline-danger btn-xs">Delete</button>
+              <button type="submit" class="btn btn-block btn-outline-danger mt-1">Delete</button>
             </form>
-    </div>
-  </div>
+   
 
 
+
+         
+          
+ 
+           
+              <button type="button" class="btn btn-block btn-outline-info m-1" onclick="openChildren('<?php echo $data['user_id']; ?>')">Parent</button>
+   
+  
+
+
+</div>
 
 
 
@@ -355,6 +413,133 @@ function getInitials($string) {
       "responsive": true,
     });
 </script>
+
+
+
+
+      <div class="modal fade" id="permissionsModal">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Children List</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+                    <form id="permissionsForm">
+          <input type="hidden" id="perm_role_id">
+          <div class="row" id="permissionsList"></div>
+        </form>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+           
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>
+      <!-- /.modal -->
+
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript">
+
+    function openChildren(id) {
+      $('#perm_role_id').val(id);
+      
+      $.ajax({
+        url: 'parents-family',  // Endpoint to get children data
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ user_id: id }),
+        dataType: 'json',
+        success: function(response) {
+          console.log('Response:', response);
+          
+          if (response.success) {
+            var permissionsList = $('#permissionsList');
+            permissionsList.empty(); // Clear any previous list
+
+            // Check if there are children to display
+            if (response.children && Array.isArray(response.children)) {
+              response.children.forEach(function(child) {
+                if (child && child.id) {
+                  // Convert both child.id and assigned_children values to strings for comparison
+                  var isChecked = response.assigned_children.includes(child.id.toString()) ? 'checked' : '';
+                  permissionsList.append(`
+                    <div class="col-6">
+                    <div class="form-check">
+                      <input class="form-check-input permission-checkbox" type="checkbox" value="${child.id}" id="child${child.id}" ${isChecked}>
+                      <label class="form-check-label" for="child${child.id}">${child.fullname}</label>
+                    </div>
+                    </div>
+                  `);
+                }
+              });
+              
+              // Add event listener for check/uncheck actions
+              $('.permission-checkbox').change(function() {
+                updateChildren(id);  // Update children based on user id
+              });
+
+              $('#permissionsModal').modal('show');
+            } else {
+              showToast('Error', 'No children data available.');
+            }
+          } else {
+            showToast('Error', 'Failed to load children.');
+          }
+        }
+      });
+    }
+
+    function updateChildren(userId) {
+      var selectedChildren = [];
+      
+      // Gather all selected children
+      $('.permission-checkbox:checked').each(function() {
+        selectedChildren.push($(this).val());
+      });
+
+      $.ajax({
+        url: 'update-children',  // Endpoint to update children data
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ user_id: userId, children: selectedChildren }),
+        dataType: 'json',
+        success: function(response) {
+         showToast('Success', 'Permissions updated successfully.');
+        }
+       
+      });
+    }
+
+
+      // Function to display toast notifications
+  function showToast(title, message) {
+    $(document).Toasts('create', {
+      title: title,
+      body: message,
+      autohide: true,
+      delay: 2000,
+      class: title === 'Success' ? 'bg-success' : 'bg-danger'
+    });
+  }
+
+</script>
+
+
 
 <?php
 $content = ob_get_clean();

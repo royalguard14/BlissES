@@ -93,14 +93,17 @@ $routes = [
     'deleteFile' => ['controller' => 'StudentAccessController', 'action' => 'deleteFile'],
      'parents-list' => ['controller' => 'RegistrarMngtController', 'action' => 'showsParentList'],
      'parents-add' => ['controller' => 'RegistrarMngtController', 'action' => 'addParentList'],
-     'parents-fetch' => ['controller' => 'RegistrarMngtController', 'action' => 'fetchParentList'],
+
      'parents-update' => ['controller' => 'RegistrarMngtController', 'action' => 'updateParentList'],
      'parents-family' => ['controller' => 'RegistrarMngtController', 'action' => 'familyParentList'],
+     'update-children' => ['controller' => 'RegistrarMngtController', 'action' => 'updatechildren'],
 
      'fetch-chat-available' => ['controller' => 'MsgManagementController', 'action' => 'chatavailable'],
      'fetch-message' => ['controller' => 'MsgManagementController', 'action' => 'fetchmessage'],
      
      'sendMessage' => ['controller' => 'MsgManagementController', 'action' => 'sendMessage'],
+'attendance-grade' => ['controller' => 'DashboardController', 'action' => 'attendancegrade'],
+     
 
 
 

@@ -900,4 +900,90 @@ public function deleteUser() {
         echo "Error: Invalid request or missing parameters.";
     }
 }
+
+
+
+public function updatechildren(){
+
+            // Get the JSON data from the request
+        $data = json_decode(file_get_contents('php://input'), true);
+        $user_id = $data['user_id'];
+        $children = implode(',', $data['children']); // Convert array to comma-separated string
+
+        try {
+            // Update the roles table with the new permission_id value
+            $stmt = $this->db->prepare("UPDATE parent_children SET children = :children WHERE user_id = :user_id");
+            $stmt->bindParam(':children', $children, PDO::PARAM_STR);
+            $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+            
+            if ($stmt->execute()) {
+             echo json_encode(['success' => true, 'message' => 'children updated successfully.']);
+            } else {
+                 echo json_encode(['success' => false, 'message' => 'Failed to execute update statement.']);
+           
+            }
+        } catch (PDOException $e) {
+           echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+      
+        }
+}
+
+
+
+
+public function familyParentList() {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $user_id = $input['user_id'];
+
+    // Fetch role and assigned permissions
+    $stmt = $this->db->prepare("SELECT children FROM parent_children WHERE user_id = :user_id");
+    $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $role = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // If no data is found for the user_id, add a default entry
+    if (!$role) {
+        // Assuming you want to insert a default empty value for children (you can change this based on your requirements)
+        $stmt = $this->db->prepare("INSERT INTO parent_children (user_id, children) VALUES (:user_id, '')");
+        $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        // Set a default value for assigned children
+        $assigned_children = [];
+    } else {
+        // Convert permission_id from a string to an array (assuming the column is 'children', change if necessary)
+        $assigned_children = explode(',', $role['children']);
+    }
+
+    // Fetch all permissions (children profiles with role_id = 3)
+    $stmt = $this->db->prepare("SELECT
+    u.user_id as id, 
+        CONCAT(
+            COALESCE(p.last_name, ''), ', ',
+            COALESCE(p.first_name, ''), ' ',
+            COALESCE(
+                CASE
+                    WHEN p.middle_name IS NOT NULL AND p.middle_name != '' 
+                    THEN CONCAT(SUBSTRING(p.middle_name, 1, 1), '.')
+                    ELSE ''
+                END, 
+            '') 
+        ) AS fullname
+        FROM profiles p
+        LEFT JOIN users u ON p.profile_id = u.user_id
+        WHERE u.role_id = 3
+        Order by p.last_name ASC
+    ");
+    $stmt->execute();
+    $children = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Return response
+    echo json_encode([
+        'success' => true,
+        'children' => $children,
+        'assigned_children' => $assigned_children
+    ]);
+}
+
+
 }
