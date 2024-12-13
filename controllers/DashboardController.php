@@ -314,7 +314,8 @@ $registrarSummary = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $this->adviserDashboard();
             break;
             case 3: //Learners
-            $this->studentDashboard();
+                header("Location: learners-profile");
+                exit();
             break;
             case 4: //Registrar
             $this->registrarDashboard();
