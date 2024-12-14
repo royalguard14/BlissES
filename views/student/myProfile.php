@@ -282,8 +282,8 @@ $(document).ready(function() {
                 return xhr;
             },
             success: function(response) {
-                alert(response);
-                $('#user-modal').modal('hide');
+                 window.location.reload(); // Corrected this line
+                               $('#user-modal').modal('hide');
                 // Optionally update the profile photo on the page.
             },
             error: function() {
