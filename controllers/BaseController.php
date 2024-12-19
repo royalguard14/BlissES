@@ -16,19 +16,23 @@ function dd($data) {
 }
 class BaseController {
     protected $db;
-    protected $timeoutDuration = 3600;  
+    protected $timeoutDuration = 10;  
     protected $name; 
     protected $roleid;
     protected $title;
     protected $devname;
     protected $system;
     protected $acadsyear;
-      protected $faker;
+    protected $faker;
 
 
 
 
     public function __construct($db, $permissions = []) {
+
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
         $this->faker = Faker::create();
         $this->db = $db;
         $this->checkLoginStatus();
@@ -43,23 +47,41 @@ class BaseController {
 
 
 
-protected function websiteDetails(){
+    protected function websiteDetails(){
 
-$this->title = "Bliss Elementary School";
-$this->devname = "Zear Developer";
-$this->system = "Web-based Student Records Management System for Bliss Elementary School ";
+
+
+
+
+        $stmt = $this->db->prepare("SELECT function, name FROM campus_info WHERE id IN (9,10,11) ORDER BY FIELD(id, 9,10,11);");
+        $stmt->execute();
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->timeoutDuration = (int) $result[0]['function'];
+        $this->title = $result[1]['function'];
+        $this->system = $result[2]['function'];
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
         $stmt = $this->db->prepare("SELECT function FROM campus_info WHERE id = 6");
-     
+
         $stmt->execute();
         $this->acadsyear = (int) $stmt->fetch(PDO::FETCH_ASSOC)['function'];
 
 
 
-}
+    }
 
     protected function initializeUserDetails() {
         if (isset($_SESSION['user_id'])) {

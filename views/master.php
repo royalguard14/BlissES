@@ -178,7 +178,7 @@ $(document).ready(function() {
     }
 
     // Call the function every second
-    setInterval(updateUnreadMessageCount, 1000);
+    setInterval(updateUnreadMessageCount, 20000);
 
     // Call immediately on page load
     updateUnreadMessageCount();

@@ -7,7 +7,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AdminLTE 3 | Top Navigation</title>
+  <title><?= $this->title?></title>
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome Icons -->
@@ -63,17 +63,6 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
   }
 </style>
 
-
-
-
-
-
-
-
-
-
-
-
 </head>
 <body class="hold-transition layout-top-nav">
   <div class="wrapper">
@@ -81,7 +70,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
     <nav class="main-header navbar navbar-expand-md navbar-light navbar-white">
       <div class="container">
         <a href="assets/index3.html" class="navbar-brand">
-          <img src="assets/logo.jpg" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8;background-color: transparent;">
+          <img src="assets/logo1.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8;background-color: transparent;">
           <span class="brand-text font-weight-light"><?= $this->title ?></span>
         </a>
         <button class="navbar-toggler order-1" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
@@ -151,7 +140,7 @@ $(document).ready(function() {
     }
 
     // Call the function every second
-    setInterval(updateUnreadMessageCount, 1000);
+    setInterval(updateUnreadMessageCount, 20000);
 
     // Call immediately on page load
     updateUnreadMessageCount();
@@ -323,85 +312,7 @@ $(document).ready(function() {
     fetchContacts(); // Fetch the list of available contacts
   });
       closeDrawerBtn.addEventListener('click', () => drawer.classList.remove('open'));
-  // Fetch user list using $.ajax
-// function fetchContacts() {
-//     $.ajax({
-//         url: 'fetch-chat-available', // Replace with your server endpoint
-//         method: 'GET',
-//         dataType: 'json',
-//         success: function (data) {
-//             // Clear existing content
-//             $('#teacher-list').empty();
-//             $('#user-list').empty();
-
-//             // Remove sections to ensure they are recreated only when necessary
-//             $('#adviser-section').remove();
-//             $('#classmate-section').remove();
-//             $('#parent-section').remove();
-
-//             // Handle adviser data
-//             if (data.adviser) {
-//                 const adviserSection = `
-//                     <div id="adviser-section">
-//                         <h5>My Adviser</h5>
-//                         <ul id="teacher-list"></ul>
-//                     </div>`;
-//                 $(adviserSection).appendTo('.drawer-body');
-
-//                 const adviserItem = document.createElement('li');
-//                 adviserItem.textContent = `Adviser: ${data.adviser.name}`;
-//                 adviserItem.dataset.userId = data.adviser.id; // Store the adviser's ID
-//                 adviserItem.addEventListener('click', () => openChatWindow(data.adviser)); // Add click event
-//                 $('#teacher-list').append(adviserItem);
-//             }
-
-//             // Handle classmates data
-//             if (data.classmates && data.classmates.length > 0) {
-//                 const classmateSection = `
-//                     <div id="classmate-section">
-//                         <h5>My Classmates</h5>
-//                         <ul id="user-list"></ul>
-//                     </div>`;
-//                 $(classmateSection).appendTo('.drawer-body');
-
-//                 data.classmates.forEach(user => {
-//                     const li = document.createElement('li');
-//                     li.textContent = user.name; // Display the user's name
-//                     li.dataset.userId = user.id; // Store the user's ID
-//                     li.addEventListener('click', () => openChatWindow(user)); // Add click event
-//                     $('#user-list').append(li); // Append to classmates list
-//                 });
-//             }
-
-//             // Handle parents data
-//             if (data.parents && data.parents.length > 0) {
-//                 const parentSection = `
-//                     <div id="parent-section">
-//                         <h5>Parents</h5>
-//                         <ul id="parent-list"></ul>
-//                     </div>`;
-//                 $(parentSection).appendTo('.drawer-body');
-
-//                 data.parents.forEach(parent => {
-//                     const li = document.createElement('li');
-//                     li.textContent = parent.name; // Display parent's name
-//                     li.dataset.userId = parent.id; // Store parent's ID
-//                     li.addEventListener('click', () => openChatWindow(parent)); // Add click event
-//                     $('#parent-list').append(li); // Append to parents list
-//                 });
-//             }
-
-//             // Show message if no data for any section
-//             if (!data.adviser && (!data.classmates || data.classmates.length === 0) && (!data.parents || data.parents.length === 0)) {
-//                 const noDataMessage = `<p>No contacts available</p>`;
-//                 $('.drawer-body').append(noDataMessage);
-//             }
-//         },
-//         error: function (xhr, status, error) {
-//             console.error('Error fetching contacts:', error);
-//         }
-//     });
-// }
+ 
 
 function fetchContacts() {
     $.ajax({
