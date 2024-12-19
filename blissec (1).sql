@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 19, 2024 at 10:45 AM
+-- Generation Time: Dec 19, 2024 at 03:00 PM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 8.1.0
 
@@ -120,7 +120,10 @@ INSERT INTO `campus_info` (`id`, `name`, `function`) VALUES
 (5, 'Principal', 'Luz F. Bongabong'),
 (6, 'Present School Year', '4'),
 (7, 'Institutional Email', '@gmail.com'),
-(8, 'Grading', '1');
+(8, 'Grading', '1'),
+(9, 'Time out Duration (Seconds)', '10'),
+(10, 'Title', 'Bliss Elementary School'),
+(11, 'System name', 'Web-based Student Records Management System for Bliss Elementary School');
 
 -- --------------------------------------------------------
 
@@ -1209,7 +1212,7 @@ ALTER TABLE `attendance_records`
 -- AUTO_INCREMENT for table `campus_info`
 --
 ALTER TABLE `campus_info`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `emoji`
