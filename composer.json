@@ -1,6 +1,7 @@
 {
   "require": {
     "phpoffice/phpspreadsheet": "^3.4",
-    "cboden/ratchet": "^0.4.4"
+    "cboden/ratchet": "^0.4.4",
+    "fakerphp/faker": "^1.24"
   }
 }

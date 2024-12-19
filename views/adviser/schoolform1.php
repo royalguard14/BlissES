@@ -41,7 +41,8 @@ $pageTitle = 'School Form 1 - School Register';
 
 <div style="overflow-y: auto; max-height: 500px; border: 1px solid #ddd;">
     <!-- <table  class="table table-bordered table-hover"> -->
-         <table class="table table-head-fixed text-nowrap" id="example2">
+         <table class="table table-head-fixed text-nowrap" id="example1">
+          
         <thead>
             <tr>
                 <th colspan="9"></th>
@@ -133,6 +134,11 @@ $pageTitle = 'School Form 1 - School Register';
         }
     }
 </script>
+
+
+
+
+
 <?php
 $content = ob_get_clean();
 include 'views/master.php';

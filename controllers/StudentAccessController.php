@@ -166,76 +166,77 @@ include 'views/student/myProfile.php';
 
 
 public function uploadprofile() {
-    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['profile_pic'])) {
-        $userId = (int) $_SESSION['user_id']; 
+    header('Content-Type: application/json');
 
-        
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['profile_pic'])) {
+        $userId = (int) $_SESSION['user_id'];
+
+        // Fetch user profile information
         $stmt = $this->db->prepare("SELECT photo_path, lrn FROM profiles WHERE profile_id = :user_id");
         $stmt->bindParam(':user_id', $userId);
         $stmt->execute();
         $profile = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$profile) {
-            echo "User profile not found.";
+            echo json_encode(['success' => false, 'message' => 'User profile not found.']);
             return;
         }
 
         $lrn = $profile['lrn'];
 
-        
+        // Check for file upload errors
         if ($_FILES['profile_pic']['error'] === UPLOAD_ERR_OK) {
-            
             $fileTmpPath = $_FILES['profile_pic']['tmp_name'];
             $fileName = $_FILES['profile_pic']['name'];
-            $fileSize = $_FILES['profile_pic']['size'];
-            $fileType = $_FILES['profile_pic']['type'];
-
-            
             $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-            
+            // Allowed file extensions
             $allowedExtensions = ['jpg', 'jpeg', 'png'];
 
-            
             if (in_array($fileExtension, $allowedExtensions)) {
-                
                 $uploadDir = 'assets/img/profile/';
                 $newFileName = $lrn . '.' . $fileExtension;
                 $destPath = $uploadDir . $newFileName;
 
-                
+                // Resize the image
                 $resizedImage = $this->resizeImage($fileTmpPath, 128, 128, $fileExtension);
 
                 if ($resizedImage) {
-                    
-                    if (imagejpeg($resizedImage, $destPath, 90)) {  
-                        
+                    if (imagejpeg($resizedImage, $destPath, 90)) {
+                        // Update the database with the new file path
                         $stmt = $this->db->prepare("UPDATE profiles SET photo_path = :photo_path WHERE profile_id = :user_id");
                         $stmt->bindParam(':photo_path', $destPath);
                         $stmt->bindParam(':user_id', $userId);
 
                         if ($stmt->execute()) {
-                                header("Location: /BlissES/learners-profile");
-            exit();
+                            echo json_encode(['success' => true, 'newPhotoPath' => $destPath]);
+                            return;
                         } else {
-                            echo "Error updating profile photo in the database.";
+                            echo json_encode(['success' => false, 'message' => 'Error updating profile photo in the database.']);
+                            return;
                         }
                     } else {
-                        echo "Error saving the resized image.";
+                        echo json_encode(['success' => false, 'message' => 'Error saving the resized image.']);
+                        return;
                     }
                 } else {
-                    echo "Error resizing the image.";
+                    echo json_encode(['success' => false, 'message' => 'Error resizing the image.']);
+                    return;
                 }
             } else {
-                echo "Invalid file type. Please upload a .jpg, .jpeg, or .png file.";
+                echo json_encode(['success' => false, 'message' => 'Invalid file type. Please upload a .jpg, .jpeg, or .png file.']);
+                return;
             }
         } else {
-            echo "Error uploading the file. Error code: " . $_FILES['profile_pic']['error'];
+            echo json_encode(['success' => false, 'message' => 'Error uploading the file. Error code: ' . $_FILES['profile_pic']['error']]);
+            return;
         }
     } else {
-        echo "No file uploaded or wrong request method.";
+        echo json_encode(['success' => false, 'message' => 'No file uploaded or wrong request method.']);
+        return;
     }
 }
+
 
 private function resizeImage($fileTmpPath, $width, $height, $extension) {
     

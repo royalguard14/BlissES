@@ -16,7 +16,9 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
   <link rel="stylesheet" href="assets/dist/css/adminlte.min.css">
   <!-- jQuery -->
   <script src="assets/plugins/jquery/jquery.min.js"></script>
-
+  <!-- SweetAlert2 -->
+  <link rel="stylesheet" href="assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+  <script src="assets/plugins/sweetalert2-theme-bootstrap-4/sw.js"></script>
 
 
 <style type="text/css">
@@ -79,7 +81,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
     <nav class="main-header navbar navbar-expand-md navbar-light navbar-white">
       <div class="container">
         <a href="assets/index3.html" class="navbar-brand">
-          <img src="assets/dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+          <img src="assets/logo.jpg" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8;background-color: transparent;">
           <span class="brand-text font-weight-light"><?= $this->title ?></span>
         </a>
         <button class="navbar-toggler order-1" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
@@ -114,7 +116,61 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
         <ul class="order-1 order-md-3 navbar-nav navbar-no-expand ml-auto">
           <a class="nav-link" data-toggle="dropdown" href="#" id="open-drawer">
             <i class="fas fa-comments"></i>
+            <span id="unread-message-badge" class="badge badge-danger navbar-badge">0</span>
           </a>
+
+
+
+<script>
+$(document).ready(function() {
+    // Function to fetch and update the unread message count
+    function updateUnreadMessageCount() {
+        $.ajax({
+            url: 'message_count', // Replace with your backend endpoint
+            method: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                // Ensure response.count is valid
+                if (response && response.count !== undefined) {
+                    const badge = $('#unread-message-badge'); // Use the badge ID
+                    const unreadCount = parseInt(response.count, 10);
+
+                    if (unreadCount > 0) {
+                        badge.text(unreadCount).show(); // Show badge with count
+                    } else {
+                        badge.hide(); // Hide badge when count is 0
+                    }
+                } else {
+                    console.error('Invalid response from server.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Failed to fetch unread message count:', error);
+            }
+        });
+    }
+
+    // Call the function every second
+    setInterval(updateUnreadMessageCount, 1000);
+
+    // Call immediately on page load
+    updateUnreadMessageCount();
+});
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           <li class="nav-item">
             <a href="logout" class="nav-link text-red ">logout</a>
           </li>
@@ -164,7 +220,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
     <footer class="main-footer">
       <!-- To the right -->
       <div class="float-right d-none d-sm-inline">
-        Anything you want
+       <?=$this->system?>
       </div>
       <!-- Default to the left -->
       <strong>Copyright &copy; 2014-2021 <a href="https://adminlte.io">AdminLTE.io</a>.</strong> All rights reserved.
@@ -268,6 +324,85 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
   });
       closeDrawerBtn.addEventListener('click', () => drawer.classList.remove('open'));
   // Fetch user list using $.ajax
+// function fetchContacts() {
+//     $.ajax({
+//         url: 'fetch-chat-available', // Replace with your server endpoint
+//         method: 'GET',
+//         dataType: 'json',
+//         success: function (data) {
+//             // Clear existing content
+//             $('#teacher-list').empty();
+//             $('#user-list').empty();
+
+//             // Remove sections to ensure they are recreated only when necessary
+//             $('#adviser-section').remove();
+//             $('#classmate-section').remove();
+//             $('#parent-section').remove();
+
+//             // Handle adviser data
+//             if (data.adviser) {
+//                 const adviserSection = `
+//                     <div id="adviser-section">
+//                         <h5>My Adviser</h5>
+//                         <ul id="teacher-list"></ul>
+//                     </div>`;
+//                 $(adviserSection).appendTo('.drawer-body');
+
+//                 const adviserItem = document.createElement('li');
+//                 adviserItem.textContent = `Adviser: ${data.adviser.name}`;
+//                 adviserItem.dataset.userId = data.adviser.id; // Store the adviser's ID
+//                 adviserItem.addEventListener('click', () => openChatWindow(data.adviser)); // Add click event
+//                 $('#teacher-list').append(adviserItem);
+//             }
+
+//             // Handle classmates data
+//             if (data.classmates && data.classmates.length > 0) {
+//                 const classmateSection = `
+//                     <div id="classmate-section">
+//                         <h5>My Classmates</h5>
+//                         <ul id="user-list"></ul>
+//                     </div>`;
+//                 $(classmateSection).appendTo('.drawer-body');
+
+//                 data.classmates.forEach(user => {
+//                     const li = document.createElement('li');
+//                     li.textContent = user.name; // Display the user's name
+//                     li.dataset.userId = user.id; // Store the user's ID
+//                     li.addEventListener('click', () => openChatWindow(user)); // Add click event
+//                     $('#user-list').append(li); // Append to classmates list
+//                 });
+//             }
+
+//             // Handle parents data
+//             if (data.parents && data.parents.length > 0) {
+//                 const parentSection = `
+//                     <div id="parent-section">
+//                         <h5>Parents</h5>
+//                         <ul id="parent-list"></ul>
+//                     </div>`;
+//                 $(parentSection).appendTo('.drawer-body');
+
+//                 data.parents.forEach(parent => {
+//                     const li = document.createElement('li');
+//                     li.textContent = parent.name; // Display parent's name
+//                     li.dataset.userId = parent.id; // Store parent's ID
+//                     li.addEventListener('click', () => openChatWindow(parent)); // Add click event
+//                     $('#parent-list').append(li); // Append to parents list
+//                 });
+//             }
+
+//             // Show message if no data for any section
+//             if (!data.adviser && (!data.classmates || data.classmates.length === 0) && (!data.parents || data.parents.length === 0)) {
+//                 const noDataMessage = `<p>No contacts available</p>`;
+//                 $('.drawer-body').append(noDataMessage);
+//             }
+//         },
+//         error: function (xhr, status, error) {
+//             console.error('Error fetching contacts:', error);
+//         }
+//     });
+// }
+
 function fetchContacts() {
     $.ajax({
         url: 'fetch-chat-available', // Replace with your server endpoint
@@ -293,8 +428,14 @@ function fetchContacts() {
                 $(adviserSection).appendTo('.drawer-body');
 
                 const adviserItem = document.createElement('li');
-                adviserItem.textContent = `Adviser: ${data.adviser.name}`;
+                adviserItem.innerHTML = `Adviser: ${data.adviser.name}`;
                 adviserItem.dataset.userId = data.adviser.id; // Store the adviser's ID
+
+                // Add unread badge if unread_count > 0
+                if (data.adviser.unread_count > 0) {
+                    adviserItem.innerHTML += ` <span class="badge badge-danger">${data.adviser.unread_count}</span>`;
+                }
+
                 adviserItem.addEventListener('click', () => openChatWindow(data.adviser)); // Add click event
                 $('#teacher-list').append(adviserItem);
             }
@@ -310,8 +451,14 @@ function fetchContacts() {
 
                 data.classmates.forEach(user => {
                     const li = document.createElement('li');
-                    li.textContent = user.name; // Display the user's name
+                    li.innerHTML = user.name; // Display the user's name
                     li.dataset.userId = user.id; // Store the user's ID
+
+                    // Add unread badge if unread_count > 0
+                    if (user.unread_count > 0) {
+                        li.innerHTML += ` <span class="badge badge-danger">${user.unread_count}</span>`;
+                    }
+
                     li.addEventListener('click', () => openChatWindow(user)); // Add click event
                     $('#user-list').append(li); // Append to classmates list
                 });
@@ -328,8 +475,14 @@ function fetchContacts() {
 
                 data.parents.forEach(parent => {
                     const li = document.createElement('li');
-                    li.textContent = parent.name; // Display parent's name
+                    li.innerHTML = parent.name; // Display parent's name
                     li.dataset.userId = parent.id; // Store parent's ID
+
+                    // Add unread badge if unread_count > 0
+                    if (parent.unread_count > 0) {
+                        li.innerHTML += ` <span class="badge badge-danger">${parent.unread_count}</span>`;
+                    }
+
                     li.addEventListener('click', () => openChatWindow(parent)); // Add click event
                     $('#parent-list').append(li); // Append to parents list
                 });
@@ -346,7 +499,6 @@ function fetchContacts() {
         }
     });
 }
-
 
 
 
@@ -553,5 +705,7 @@ function startFetchingMessagesForChat(userId) {
 });
 </script>
 <script src="assets/js/widget.js"></script>
+  <!-- SweetAlert2 -->
+  <script src="assets/plugins/sweetalert2/sweetalert2.min.js"></script>
 </body>
 </html>

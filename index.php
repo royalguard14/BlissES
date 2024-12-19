@@ -1,6 +1,7 @@
 <?php
 require 'vendor/autoload.php';
 
+$faker = \Faker\Factory::create();
 
 // Start session
 if (session_status() === PHP_SESSION_NONE) {
@@ -100,9 +101,20 @@ $routes = [
 
      'fetch-chat-available' => ['controller' => 'MsgManagementController', 'action' => 'chatavailable'],
      'fetch-message' => ['controller' => 'MsgManagementController', 'action' => 'fetchmessage'],
+     'message_count' => ['controller' => 'MsgManagementController', 'action' => 'message_count'],
+     
      
      'sendMessage' => ['controller' => 'MsgManagementController', 'action' => 'sendMessage'],
 'attendance-grade' => ['controller' => 'DashboardController', 'action' => 'attendancegrade'],
+
+
+'generateSF2Report' => ['controller' => 'AdviserMngtController', 'action' => 'generateSF2Report'],
+'getDateBackend' => ['controller' => 'AdviserMngtController', 'action' => 'getAvailableDate'],
+
+'generateStudentList' => ['controller' => 'AdviserMngtController', 'action' => 'generateStudentList'],
+'generateGradeRecord' => ['controller' => 'AdviserMngtController', 'action' => 'generateGradeRecord'],
+
+
      
 
 

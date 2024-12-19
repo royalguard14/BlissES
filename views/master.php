@@ -46,6 +46,10 @@ if (!isset($_SESSION['log_in']) || !$_SESSION['log_in']) {
   <link rel="stylesheet" href="assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
   <link rel="stylesheet" href="assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
 
+<!-- ChartJS -->
+<script src="assets/plugins/chart.js/Chart.min.js"></script>
+
+
 
 <!-- jQuery -->
 <script src="assets/plugins/jquery/jquery.min.js"></script>
@@ -136,14 +140,51 @@ if (!isset($_SESSION['log_in']) || !$_SESSION['log_in']) {
       <!-- Navbar Search -->
   
 
-      <!-- Messages Dropdown Menu -->
-      <li class="nav-item dropdown">
-        <a class="nav-link" data-toggle="dropdown" href="#" id="open-drawer">
-          <i class="far fa-comments"></i>
-      
-        </a>
+<!-- Messages Dropdown Menu -->
+<li class="nav-item dropdown">
+    <a class="nav-link" data-toggle="dropdown" href="#" id="open-drawer">
+        <i class="far fa-comments"></i>
+        <span id="unread-message-badge" class="badge badge-danger navbar-badge">0</span>
+    </a>
+</li>
 
-      </li>
+<script>
+$(document).ready(function() {
+    // Function to fetch and update the unread message count
+    function updateUnreadMessageCount() {
+        $.ajax({
+            url: 'message_count', // Replace with your backend endpoint
+            method: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                // Ensure response.count is valid
+                if (response && response.count !== undefined) {
+                    const badge = $('#unread-message-badge'); // Use the badge ID
+                    const unreadCount = parseInt(response.count, 10);
+
+                    if (unreadCount > 0) {
+                        badge.text(unreadCount).show(); // Show badge with count
+                    } else {
+                        badge.hide(); // Hide badge when count is 0
+                    }
+                } else {
+                    console.error('Invalid response from server.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Failed to fetch unread message count:', error);
+            }
+        });
+    }
+
+    // Call the function every second
+    setInterval(updateUnreadMessageCount, 1000);
+
+    // Call immediately on page load
+    updateUnreadMessageCount();
+});
+</script>
+
       
       <li class="nav-item">
         <a class="nav-link" data-widget="fullscreen" href="#" role="button">
@@ -171,7 +212,7 @@ if (!isset($_SESSION['log_in']) || !$_SESSION['log_in']) {
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
     <a href="index3.html" class="brand-link">
-      <img src="assets/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+      <img src="assets/logo1.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8;background-color: transparent;">
       <span class="brand-text font-weight-light" style="font-size:1rem"><?= $this->title ?></span>
     </a>
 
@@ -268,6 +309,7 @@ if (!isset($_SESSION['log_in']) || !$_SESSION['log_in']) {
 <script src="assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/widget.js"></script>
 <!-- ChartJS -->
+
 <script src="assets/plugins/chart.js/Chart.min.js"></script>
 <!-- Sparkline -->
 <script src="assets/plugins/sparklines/sparkline.js"></script>
@@ -464,23 +506,28 @@ function fetchContacts() {
 
 
                         // Handle classmates data
-            if (data.adviser_class && data.adviser_class.length > 0) {
-                const AdviserSection = `
-                    <div id="classmate-section">
-                        <h5>My Advisory Class</h5>
-                        <ul id="user-list"></ul>
-                    </div>`;
-                $(AdviserSection).appendTo('.drawer-body');
+if (data.adviser_class && data.adviser_class.length > 0) {
+    const AdviserSection = `
+        <div id="classmate-section">
+            <h5>My Advisory Class</h5>
+            <ul id="user-list"></ul>
+        </div>`;
+    $(AdviserSection).appendTo('.drawer-body');
 
+    data.adviser_class.forEach(user => {
+        const li = document.createElement('li');
+        li.textContent = `${user.name}`;
 
-                data.adviser_class.forEach(user => {
-                    const li = document.createElement('li');
-                    li.textContent = user.name; // Display the user's name
-                    li.dataset.userId = user.id; // Store the user's ID
-                    li.addEventListener('click', () => openChatWindow(user)); // Add click event
-                    $('#user-list').append(li); // Append to classmates list
-                });
-            }
+        if (user.unread_count > 0) {
+            li.innerHTML += ` <span class="badge badge-danger">${user.unread_count}</span>`;
+        }
+
+        li.dataset.userId = user.id;
+        li.addEventListener('click', () => openChatWindow(user));
+        $('#user-list').append(li);
+    });
+}
+
 
             // Handle parents data
             if (data.parents && data.parents.length > 0) {

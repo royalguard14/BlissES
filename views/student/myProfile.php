@@ -282,9 +282,26 @@ $(document).ready(function() {
                 return xhr;
             },
             success: function(response) {
-                 window.location.reload(); // Corrected this line
-                               $('#user-modal').modal('hide');
-                // Optionally update the profile photo on the page.
+                       if (response.success) {
+Swal.fire({
+  position: "center",
+  icon: "success", // Corrected the typo ("succres" -> "success")
+  title: "Your work has been saved",
+  showConfirmButton: false,
+  timer: 1500
+}).then(() => { // Use a callback function here
+  var newSrc = response.newPhotoPath + '?t=' + new Date().getTime(); // Add timestamp to avoid caching
+  $('.profile-user-img').attr('src', newSrc);
+
+  // Hide the modal
+  $('#user-modal').modal('hide');
+});
+
+
+    } else {
+        alert(response.message || 'Error updating profile picture.');
+    }
+
             },
             error: function() {
                 alert('Error uploading file.');

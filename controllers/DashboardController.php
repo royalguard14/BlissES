@@ -215,6 +215,189 @@ public function adviserDashboard() {
         }
 
 
+/*Start here*/
+// Helper function to get all weekdays in a month
+function getWeekdaysInMonth($month_id) {
+    $startDate = new DateTime("$month_id-01");
+    $endDate = new DateTime($startDate->format('Y-m-t')); // Last day of the month
+    $weekdays = [];
+
+    while ($startDate <= $endDate) {
+        // Add to weekdays if it's a weekday (Monday to Friday)
+        if (in_array($startDate->format('N'), [1, 2, 3, 4, 5])) {
+            $weekdays[] = $startDate->format('Y-m-d');
+        }
+        $startDate->modify('+1 day');
+    }
+    return $weekdays;
+}
+
+$today = date('Y-m-d');
+$month_id = date('Y-m');
+
+            $stmt = $this->db->prepare("SELECT function FROM campus_info WHERE id = 8");
+            $stmt->execute();
+            $campusInfoData = $stmt->fetch(PDO::FETCH_ASSOC);
+            $currentGrading = (int)$campusInfoData['function'];
+            $stmt = $this->db->prepare("SELECT * FROM campus_info WHERE id = 6");
+            $stmt->execute();
+            $CampusInfoData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $present_school_year = (int) $CampusInfoData[0]['function'];
+    // Get the adviser ID from the session
+            $adviserId = $_SESSION['user_id'];
+            $result = $this->getAdviserSectionAndGrade($adviserId);
+            $_SESSION['section_id'] = $result['section_id'];
+ // Fetch the adviser's section student for this year
+            $stmt = $this->db->prepare("SELECT
+                eh.id,p.sex,eh.user_id
+                FROM enrollment_history eh
+                LEFT JOIN profiles p ON p.profile_id = eh.user_id
+                WHERE 
+                eh.grade_level_id = :grade_level_id 
+                AND eh.section_id = :section_id
+                AND adviser_id = :adviser_id
+                AND academic_year_id = :academic_year_id
+                ");
+            $stmt->bindValue(':grade_level_id', $result['grade_level_id'], PDO::PARAM_INT);
+            $stmt->bindValue(':section_id', $result['section_id'], PDO::PARAM_INT);
+            $stmt->bindValue(':adviser_id', $adviserId, PDO::PARAM_INT);
+            $stmt->bindValue(':academic_year_id', $present_school_year, PDO::PARAM_INT);
+            $stmt->execute();
+            $mystudent = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+// Extract the user IDs from $mystudent array to filter only your students
+            $studentUserIds = array_map(function($student) {
+                return $student['user_id'];
+            }, $mystudent);
+
+// Convert the array of user IDs to a comma-separated string
+            $userIdsString = implode(',', $studentUserIds);
+
+
+// Fetch all attendance data for the month
+$stmt = $this->db->prepare("
+    SELECT
+        p.profile_id AS user_id,
+        p.sex,
+        ar.date,
+        ar.status
+    FROM profiles p
+    LEFT JOIN attendance_records ar ON p.profile_id = ar.user_id
+    WHERE p.profile_id IN ($userIdsString) -- Filter for specific users
+    AND DATE_FORMAT(ar.date, '%Y-%m') = :month -- Filter by the specified month
+    ORDER BY ar.user_id, ar.date
+");
+$stmt->bindValue(':month', $month_id, PDO::PARAM_STR);
+$stmt->execute();
+$attendanceRecords = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get all weekdays in the month
+$weekdays = getWeekdaysInMonth($month_id);
+
+// Initialize the attendance data structure
+$userAttendanceData = [];
+foreach (explode(',', $userIdsString) as $userId) {
+    $userAttendanceData[$userId] = [
+        'user_id' => $userId,
+        'sex' => null, // This will be populated from attendance records
+        'attendance' => [
+            'present' => [],
+            'absent' => [],
+        ],
+    ];
+}
+
+// Process attendance records
+foreach ($attendanceRecords as $record) {
+    $userId = $record['user_id'];
+    $date = $record['date'];
+    $status = $record['status'];
+    $sex = $record['sex'];
+
+    // Skip if the user is not in the list
+    if (!isset($userAttendanceData[$userId])) {
+        continue;
+    }
+
+    // Set gender if not already set
+    if (is_null($userAttendanceData[$userId]['sex'])) {
+        $userAttendanceData[$userId]['sex'] = $sex;
+    }
+
+    // Record presence or absence
+    if ($status === 'P') {
+        $userAttendanceData[$userId]['attendance']['present'][] = $date;
+    } elseif (in_array($status, ['A', 'E'])) {
+        $userAttendanceData[$userId]['attendance']['absent'][] = $date;
+    }
+}
+
+// Ensure all weekdays are accounted for (marking absent if no record exists)
+foreach ($userAttendanceData as $userId => &$data) {
+    foreach ($weekdays as $date) {
+        if (!in_array($date, $data['attendance']['present']) && !in_array($date, $data['attendance']['absent'])) {
+            $data['attendance']['absent'][] = $date;
+        }
+    }
+}
+
+
+
+
+// Dates to track
+$dates = $weekdays;
+
+
+// Initialize attendance counters for each date
+$attendance_count = array_fill_keys($dates, ["present" => 0, "absent" => 0]);
+$attendance_data = $attendanceRecords;
+// Count attendance for each student
+foreach ($userAttendanceData as $student_id => $attendance) {
+    foreach ($dates as $date) {
+
+
+
+        if (in_array($date, $attendance['attendance']['present'])) {
+            $attendance_count[$date]['present']++;
+        } else {
+            $attendance_count[$date]['absent']++;
+        }
+    }
+}
+
+// Prepare the data for Chart.js (present and absent counts)
+$present_counts = [];
+$absent_counts = [];
+foreach ($dates as $date) {
+    $present_counts[] = $attendance_count[$date]['present'];
+    $absent_counts[] = $attendance_count[$date]['absent'];
+}
+
+// Encode the data to be used in JavaScript
+$present_counts_json = json_encode($present_counts);
+$absent_counts_json = json_encode($absent_counts);
+$dates_json = json_encode($dates);
+
+
+
+
+
+
+$day_labels = array_map(function($date) {
+    return date('j', strtotime($date)); // 'j' returns the day of the month without leading zeros
+}, $dates);
+
+// Convert the array of day labels into JSON format
+$day_labels_json = json_encode($day_labels);
+
+
+
+
+
+
+
+
 
     } catch (Exception $e) {
         // If there's any error, output the error message

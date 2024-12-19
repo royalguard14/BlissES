@@ -1,4 +1,14 @@
 <?php 
+
+
+// Autoload the composer packages
+require 'vendor/autoload.php';
+use Faker\Factory as Faker;
+
+
+
+
+
 function dd($data) {
     header('Content-Type: application/json');
     echo json_encode($data, JSON_PRETTY_PRINT);
@@ -13,11 +23,13 @@ class BaseController {
     protected $devname;
     protected $system;
     protected $acadsyear;
+      protected $faker;
 
 
 
 
     public function __construct($db, $permissions = []) {
+        $this->faker = Faker::create();
         $this->db = $db;
         $this->checkLoginStatus();
         $this->checkSessionTimeout();

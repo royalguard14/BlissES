@@ -2,6 +2,32 @@
 ob_start();
 $pageTitle = 'Adviser Dashboard'; 
 ?>
+
+<?php
+// Sample male and female count variables (replace with your actual data)
+$maleCount = 10;  // Example male count
+$femaleCount = 15;  // Example female count
+
+// Prepare the data for Chart.js (male and female counts)
+$gender_labels = json_encode(['Male', 'Female']);
+$gender_counts = json_encode([$maleCount, $femaleCount]);
+
+
+?>
+
+
+
+  <style>
+
+    canvas {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .chart-container {
+      text-align: center;
+    }
+  </style>
+
 <div class="row">
 	<div class="col-lg-3 col-6">
 		<!-- small box -->
@@ -57,8 +83,45 @@ $pageTitle = 'Adviser Dashboard';
 	<!-- ./col -->
 </div>
 <!-- /.row -->
+
+
+
+
+
+
+
 <div class="row">
 	<section class="col-lg-6 connectedSortable">
+
+
+
+<div class="card card-success">
+    <div class="card-header">
+        <h3 class="card-title">Attendance Chart for this month</h3>
+        <div class="card-tools">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <i class="fas fa-minus"></i>
+            </button>
+            <button type="button" class="btn btn-tool" data-card-widget="remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="chart">
+            <canvas id="attendanceChart" width="800" height="400"></canvas>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
 		<div class="card">
 			<div class="card-header">
 				<h3 class="card-title">
@@ -115,6 +178,44 @@ $pageTitle = 'Adviser Dashboard';
 		</div>
 	</section>
 	<section class="col-lg-6 connectedSortable">
+
+
+
+
+
+<!-- Second chart (duplicated) -->
+<div class="card card-success">
+    <div class="card-header">
+        <h3 class="card-title">Gender Chart</h3>
+        <div class="card-tools">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <i class="fas fa-minus"></i>
+            </button>
+            <button type="button" class="btn btn-tool" data-card-widget="remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="chart">
+            <canvas id="attendanceChart2" width="800" height="400"></canvas>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		<div class="card">
 			<div class="card-header">
 				<h3 class="card-title">
@@ -225,6 +326,64 @@ $pageTitle = 'Adviser Dashboard';
 		</div>
 	</section>
 </div>
+
+<script>
+// First Chart
+const ctx = document.getElementById('attendanceChart').getContext('2d');
+const attendanceChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: <?php echo $day_labels_json; ?>,
+        datasets: [{
+            label: 'Present',
+            data: <?php echo $present_counts_json; ?>, // Present count (y-axis)
+            backgroundColor: 'green',
+            borderColor: 'green',
+            borderWidth: 1
+        }, {
+            label: 'Absent',
+            data: <?php echo $absent_counts_json; ?>, // Absent count (y-axis)
+            backgroundColor: 'red',
+            borderColor: 'red',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Second Chart (Duplicated)
+const ctx2 = document.getElementById('attendanceChart2').getContext('2d');
+const attendanceChart2 = new Chart(ctx2, {
+    type: 'pie',
+    data: {
+         labels: <?php echo $gender_labels; ?>, 
+            datasets: [{
+                label: 'Gender Distribution',
+                data: <?php echo $gender_counts; ?>, // counts of Male, Female
+                backgroundColor: ['#36A2EB', '#FF6384'], // Colors for Male and Female
+                borderColor: ['#FFFFFF', '#FFFFFF'], // Border color
+                borderWidth: 1
+            }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+
+
 <?php
 $content = ob_get_clean();
 include 'views/master.php';

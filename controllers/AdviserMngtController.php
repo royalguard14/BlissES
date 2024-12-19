@@ -1,18 +1,23 @@
 <?php 
 require_once 'BaseController.php'; 
+
+
 class AdviserMngtController extends BaseController { 
+
     public function __construct($db) { 
         parent::__construct($db, ['9','8','7']);  
-    } 
-    public function show() {
 
-       $adviserId = $_SESSION['user_id'];
-       try {
-        $result = $this->getAdviserSectionAndGrade($adviserId);
-        $_SESSION['section_id'] = $result['section_id'];
+    } 
+
+
+    public function generateGradeRecord(){
+        try {
+            $adviserId = $_SESSION['user_id'];
+            $result = $this->getAdviserSectionAndGrade($adviserId);
+        // Fetch advisory class information
         $stmt = $this->db->prepare("
             SELECT 
-            s.id as section_id, 
+            s.id AS section_id, 
             s.section_name, 
             s.daytime, 
             COALESCE(p.lrn, 'No Data') AS lrn, 
@@ -28,21 +33,145 @@ class AdviserMngtController extends BaseController {
                     '') 
                 ) AS fullname,
             p.profile_id, 
-            p.sex
-            FROM sections s
-            LEFT JOIN enrollment_history eh ON eh.section_id = s.id
-            LEFT JOIN profiles p ON eh.user_id = p.profile_id
-            WHERE s.adviser_id = :adviser_id
+            p.sex,
+            eh.id AS eh_id 
+            FROM 
+            sections s
+            LEFT JOIN 
+            enrollment_history eh ON eh.section_id = s.id
+            LEFT JOIN 
+            profiles p ON eh.user_id = p.profile_id
+            WHERE 
+            s.adviser_id = :adviser_id
+            Order by p.last_name ASC
             ");
         $stmt->bindValue(':adviser_id', $adviserId, PDO::PARAM_INT);
         $stmt->execute();
         $advisoryClass = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    // Include the view and pass the data
 
 
-        // Query to get unenrolled students
+
+        // Fetch all subjects in the grade level
         $stmt = $this->db->prepare("
             SELECT 
+            s.id AS subject_id,
+            s.name AS subject_name
+            FROM 
+            subjects s
+            WHERE 
+            FIND_IN_SET(s.id, (
+                SELECT 
+                gl.subject_ids
+                FROM 
+                grade_level gl
+                WHERE 
+                gl.id = :grade_level
+                )) > 0
+            ");
+        $stmt->bindValue(':grade_level', $result['grade_level_id'], PDO::PARAM_INT);
+        $stmt->execute();
+        $allSubjectInGrade = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Sanitize and check if arrays are empty before querying grades
+        $studentIds = array_column($advisoryClass, 'profile_id');
+        $subjectIds = array_column($allSubjectInGrade, 'subject_id');
+
+
+
+    #echo '<pre>'.var_export($studentIds,true).'</pre>';
+
+
+
+
+$gradesStmt = $this->db->prepare("
+    SELECT 
+        gr.user_id, 
+        gr.subject_id, 
+        SUM(IFNULL(gr.grade, 0)) / 4 AS average_grade
+    FROM 
+        grade_records gr
+    WHERE 
+        gr.user_id IN (" . implode(',', array_map('intval', $studentIds)) . ")
+        AND gr.subject_id IN (" . implode(',', array_map('intval', $subjectIds)) . ")
+    GROUP BY 
+        gr.user_id, gr.subject_id
+");
+$gradesStmt->execute();
+$grades = $gradesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+$gradeMap = [];
+foreach ($grades as $grade) {
+    $gradeMap[$grade['user_id']][$grade['subject_id']] = round($grade['average_grade'], 2); // Round to 2 decimal places
+}
+
+
+echo '<table border="1" style="width: 100%; text-align: center; border-collapse: collapse;">';
+echo '<thead>';
+echo '<tr>';
+echo '<th style="padding: 10px; text-align: left;">Student Name</th>';
+
+// Add subjects as column headers
+foreach ($allSubjectInGrade as $subject) {
+    echo '<th style="padding: 10px;">' . htmlspecialchars($subject['subject_name']) . '</th>';
+}
+echo '<th style="padding: 10px;">Gen. Ave</th>'; // Add Average column
+echo '</tr>';
+echo '</thead>';
+
+echo '<tbody>';
+foreach ($advisoryClass as $student) {
+    echo '<tr>';
+    // Student name in the first column
+    echo '<td style="padding: 10px; text-align: left;">' . htmlspecialchars($student['fullname']) . '</td>';
+    
+    $totalGrade = 0;
+    $subjectsTaken = 0;
+
+    // Grades for each subject
+    foreach ($allSubjectInGrade as $subject) {
+        $grade = $gradeMap[$student['profile_id']][$subject['subject_id']] ?? 0; // Use 0 if no grade
+        echo '<td style="padding: 10px;">' . $grade . '</td>';
+        
+        // Only count non-zero grades for averaging
+        if ($grade > 0) {
+            $totalGrade += $grade;
+            $subjectsTaken++;
+        }
+    }
+    
+    // Compute the average, avoid division by zero
+    $average = $subjectsTaken > 0 ? round($totalGrade / $subjectsTaken, 2) : 0;
+    echo '<td style="padding: 10px;">' . $average . '</td>'; // Display the average
+    echo '</tr>';
+}
+echo '</tbody>';
+echo '</table>';
+
+
+
+
+
+
+
+
+        } catch (Exception $e) {
+
+            echo $e->getMessage();
+            return; 
+        }
+    }
+
+    public function generateStudentList(){
+        try {
+            $adviserId = $_SESSION['user_id'];
+            $result = $this->getAdviserSectionAndGrade($adviserId);
+            $_SESSION['section_id'] = $result['section_id'];
+            $stmt = $this->db->prepare("
+                SELECT 
+                s.id as section_id, 
+                s.section_name, 
+                s.daytime, 
                 COALESCE(p.lrn, 'No Data') AS lrn, 
                 CONCAT(
                     COALESCE(p.last_name, ''), ', ',
@@ -55,25 +184,611 @@ class AdviserMngtController extends BaseController {
                         END, 
                         '') 
                     ) AS fullname,
-                u.user_id, 
-                p.sex as gender
-            FROM users u
-            LEFT JOIN profiles p ON u.user_id = p.profile_id
-            LEFT JOIN enrollment_history eh ON eh.user_id = u.user_id AND eh.academic_year_id = :acads
-            WHERE u.role_id = 3 AND eh.user_id IS NULL
-        ");
-        $stmt->bindValue(':acads', $this->acadsyear, PDO::PARAM_INT);
-        $stmt->execute();
-        $unenrolledStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                p.profile_id, 
+                p.sex
+                FROM sections s
+                LEFT JOIN enrollment_history eh ON eh.section_id = s.id
+                LEFT JOIN profiles p ON eh.user_id = p.profile_id
+                WHERE s.adviser_id = :adviser_id
+                ");
+            $stmt->bindValue(':adviser_id', $adviserId, PDO::PARAM_INT);
+            $stmt->execute();
+            $advisoryClass = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-     
+// Separate male and female students
+            $maleStudents = array_filter($advisoryClass, fn($student) => $student['sex'] === 'M');
+            $femaleStudents = array_filter($advisoryClass, fn($student) => $student['sex'] === 'F');
 
 
-    } catch (Exception $e) {
-        echo $e->getMessage();
-        return;
+
+
+        } catch (Exception $e) {
+
+            echo $e->getMessage();
+            return; 
+        }
+        echo '
+        <table border="1" style="width: 100%; text-align: left; border-collapse: collapse;">
+        <thead>
+        <tr>
+        <th style="width: 50%; padding: 10px;">Male</th>
+        <th style="width: 50%; padding: 10px;">Female</th>
+        </tr>
+        </thead>
+        <tbody>';
+
+        $maxRows = max(count($maleStudents), count($femaleStudents));
+        $maleList = array_values($maleStudents);
+        $femaleList = array_values($femaleStudents);
+
+        for ($i = 0; $i < $maxRows; $i++) {
+            echo '<tr>';
+    // Male column
+            echo '<td style="padding: 10px;">';
+            if (isset($maleList[$i])) {
+                echo $maleList[$i]["fullname"];
+            }
+            echo '</td>';
+
+    // Female column
+            echo '<td style="padding: 10px;">';
+            if (isset($femaleList[$i])) {
+                echo $femaleList[$i]["fullname"];
+            }
+            echo '</td>';
+            echo '</tr>';
+        }
+
+        echo '
+        </tbody>
+        </table>';
+
     }
-    include 'views/adviser/advisoryClass.php';
+
+
+
+
+
+
+
+
+
+
+
+
+    public function generateSF2Report(){
+        try {
+            $month_id = $_GET['month_id'];
+          // Get the current grading from campus_info table
+            $stmt = $this->db->prepare("SELECT function FROM campus_info WHERE id = 8");
+            $stmt->execute();
+            $campusInfoData = $stmt->fetch(PDO::FETCH_ASSOC);
+            $currentGrading = (int)$campusInfoData['function'];
+            $stmt = $this->db->prepare("SELECT * FROM campus_info WHERE id = 6");
+            $stmt->execute();
+            $CampusInfoData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $present_school_year = (int) $CampusInfoData[0]['function'];
+    // Get the adviser ID from the session
+            $adviserId = $_SESSION['user_id'];
+            $result = $this->getAdviserSectionAndGrade($adviserId);
+            $_SESSION['section_id'] = $result['section_id'];
+ // Fetch the adviser's section student for this year
+            $stmt = $this->db->prepare("SELECT
+                eh.id,p.sex,eh.user_id
+                FROM enrollment_history eh
+                LEFT JOIN profiles p ON p.profile_id = eh.user_id
+                WHERE 
+                eh.grade_level_id = :grade_level_id 
+                AND eh.section_id = :section_id
+                AND adviser_id = :adviser_id
+                AND academic_year_id = :academic_year_id
+                ");
+            $stmt->bindValue(':grade_level_id', $result['grade_level_id'], PDO::PARAM_INT);
+            $stmt->bindValue(':section_id', $result['section_id'], PDO::PARAM_INT);
+            $stmt->bindValue(':adviser_id', $adviserId, PDO::PARAM_INT);
+            $stmt->bindValue(':academic_year_id', $present_school_year, PDO::PARAM_INT);
+            $stmt->execute();
+            $mystudent = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+// Extract the user IDs from $mystudent array to filter only your students
+            $studentUserIds = array_map(function($student) {
+                return $student['user_id'];
+            }, $mystudent);
+
+// Convert the array of user IDs to a comma-separated string
+            $userIdsString = implode(',', $studentUserIds);
+
+// Prepare the query with a LEFT JOIN to ensure users without attendance records are included
+            $stmt = $this->db->prepare("
+                SELECT
+                p.sex,
+                ar.user_id,
+                ar.date,
+                COUNT(CASE WHEN ar.status = 'P' THEN 1 END) AS present_count,
+                COUNT(CASE WHEN ar.status = 'A' THEN 1 END) AS absent_count,
+                COUNT(CASE WHEN ar.status = 'T' THEN 1 END) AS tardy_count,
+                COUNT(CASE WHEN ar.status = 'E' THEN 1 END) AS excused_count
+                FROM profiles p
+                LEFT JOIN attendance_records ar ON p.profile_id = ar.user_id AND DATE_FORMAT(ar.date, '%Y-%m') = :month
+    WHERE p.profile_id IN ($userIdsString)  -- Filter for your specific students
+    GROUP BY p.profile_id
+    ");
+$stmt->bindValue(':month', $month_id, PDO::PARAM_STR);  // Bind the month in 'YYYY-MM' format
+$stmt->execute();
+// Fetch the results
+$attendanceData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+
+
+
+$year = 2024;
+$firstFridayOfJune = date('Y-m-d', strtotime("first Friday of June $year"));
+$oneMonthBefore = date('Y-m-d', strtotime("$firstFridayOfJune -1 month")); // May 2024
+// Query 1: Get enrollments one month before the first Friday of June
+$stmt1 = $this->db->prepare("
+    SELECT 
+    p.sex, 
+    COUNT(*) AS count
+    FROM enrollment_history eh
+    JOIN profiles p ON p.profile_id = eh.user_id
+    WHERE eh.enrollment_date <= :firstFridayOfJune
+    AND eh.enrollment_date > :oneMonthBefore
+    AND eh.user_id IN ($userIdsString)
+    GROUP BY p.sex
+    ");
+$stmt1->bindValue(':firstFridayOfJune', $firstFridayOfJune, PDO::PARAM_STR);
+$stmt1->bindValue(':oneMonthBefore', $oneMonthBefore, PDO::PARAM_STR);
+$stmt1->execute();
+$result1 = $stmt1->fetchAll(PDO::FETCH_ASSOC);
+// Default result structure for Query 1
+$defaultResult1 = [
+    ['sex' => 'M', 'count' => 0],
+    ['sex' => 'F', 'count' => 0]
+];
+// Update the default structure with actual counts for Query 1
+foreach ($result1 as $row) {
+    foreach ($defaultResult1 as &$defaultRow1) {
+        if ($defaultRow1['sex'] === $row['sex']) {
+            $defaultRow1['count'] = $row['count'];
+            break;
+        }
+    }
+}
+
+
+
+// Get the first Friday of June
+$firstFridayOfJune = date('Y-m-d', strtotime("first Friday of June $year"));
+
+// Get the last day of the month specified by $month_id (e.g., November 2024)
+$lastDayOfMonth = date('Y-m-t', strtotime($month_id)); // 'Y-m-t' gives the last day of the month
+
+// Query 3: Get enrollments from the first Friday of June until the end of the specified month (e.g., 2024-11)
+$stmt3 = $this->db->prepare("
+    SELECT 
+    p.sex, 
+    COUNT(*) AS count
+    FROM enrollment_history eh
+    JOIN profiles p ON p.profile_id = eh.user_id
+    WHERE eh.enrollment_date BETWEEN :start_date AND :end_date
+    AND eh.user_id IN ($userIdsString)
+    GROUP BY p.sex
+    ");
+$stmt3->bindValue(':start_date', $firstFridayOfJune, PDO::PARAM_STR);
+$stmt3->bindValue(':end_date', $lastDayOfMonth, PDO::PARAM_STR);
+$stmt3->execute();
+$result3 = $stmt3->fetchAll(PDO::FETCH_ASSOC);
+
+// Default result structure for Query 3
+$defaultResult3 = [
+    ['sex' => 'M', 'count' => 0],
+    ['sex' => 'F', 'count' => 0]
+];
+
+// Update the default structure with actual counts for Query 3
+foreach ($result3 as $row) {
+    foreach ($defaultResult3 as &$defaultRow3) {
+        if ($defaultRow3['sex'] === $row['sex']) {
+            $defaultRow3['count'] = $row['count'];
+            break;
+        }
+    }
+}
+
+
+
+// Calculate the total for Query 1
+$enrollie1stofjuneM = $defaultResult1[0]['count'];
+$enrollie1stofjuneF = $defaultResult1[1]['count'];
+$enrollie1stofjuneT = $enrollie1stofjuneM + $enrollie1stofjuneF;
+
+// Calculate the total for Query 3
+$enrolliepassofjuneM = $defaultResult3[0]['count'];
+$enrolliepassofjuneF = $defaultResult3[1]['count'];
+$enrolliepassofjuneT = $enrolliepassofjuneM + $enrolliepassofjuneF;
+
+// Query 4: Get the sum of all males and females across all queries
+$totalMales = $enrollie1stofjuneM +  $enrolliepassofjuneM;
+$totalFemales = $enrollie1stofjuneF +  $enrolliepassofjuneF;
+$total = $totalMales + $totalFemales;
+
+
+$totalPresentM = 0;
+$totalAbsentM = 0;
+$totalPresentF = 0;
+$totalAbsentF = 0;
+$weekdayCount = 0;
+
+// Get the first and last day of the month
+$firstDayOfMonth = date('Y-m-d', strtotime("$month_id-01"));
+$lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
+// Initialize a counter for weekdays (Monday to Friday)
+
+// Loop through each day of the month
+$currentDate = $firstDayOfMonth;
+while ($currentDate <= $lastDayOfMonth) {
+    // Check if the current day is Monday to Friday (1 to 5 in the 'N' format)
+    if (date('N', strtotime($currentDate)) <= 5) {
+        $weekdayCount++;
+    }
+    // Move to the next day
+    $currentDate = date('Y-m-d', strtotime($currentDate . ' +1 day'));
+}
+
+
+
+
+$maleAttendance = array_filter($attendanceData, fn($data) => $data['sex'] === 'M');
+foreach ($maleAttendance as &$data) {
+    $data['totalPresent'] = $data['present_count'] + $data['tardy_count'];
+    $data['totalAbsent'] = $weekdayCount - ($data['present_count'] + $data['tardy_count']);
+    $totalPresentM += $data['totalPresent'];
+    $totalAbsentM += $data['totalAbsent'];
+}
+
+$femaleAttendance = array_filter($attendanceData, fn($data) => $data['sex'] === 'F');
+foreach ($femaleAttendance as &$data) {
+    $data['totalPresent'] = $data['present_count'] + $data['tardy_count'];
+    $data['totalAbsent'] = $weekdayCount - ($data['present_count'] + $data['tardy_count']);
+    $totalPresentF += $data['totalPresent'];
+    $totalAbsentF+= $data['totalAbsent'];
+}
+
+
+// Male attendance calculations
+$totalAttendanceM = (($totalMales * $weekdayCount) - $totalAbsentM);
+$adaM = ($weekdayCount != 0) ? intval(round($totalAttendanceM / $weekdayCount)) : 0;
+$paM = ($totalMales != 0) ? intval(round(($adaM / $totalMales) * 1)) : 0;
+$poeM = ($enrollie1stofjuneM != 0) ? intval(round(($totalMales / $enrollie1stofjuneM) * 1)) : 0;
+
+// Female attendance calculations
+$totalAttendanceF = (($totalFemales * $weekdayCount) - $totalAbsentF);
+$adaF = ($weekdayCount != 0) ? intval(round($totalAttendanceF / $weekdayCount)) : 0;
+$paF = ($totalFemales != 0) ? intval(round(($adaF / $totalFemales) * 1)) : 0;
+$poeF = ($enrollie1stofjuneF != 0) ? intval(round(($totalFemales / $enrollie1stofjuneF) * 1)) : 0;
+
+// Total attendance calculations
+$poeT = ($enrollie1stofjuneT != 0) ? intval(round(($total / $enrollie1stofjuneT) * 1)) : 0;
+$adaT = ($weekdayCount != 0) ? intval(round(($totalAttendanceM + $totalAttendanceF) / $weekdayCount)) : 0;
+$paT = ($total != 0) ? intval(round(($adaT / $total) * 1)) : 0;
+
+
+
+
+// para sa MGa absent, include na din sa data ang mga araw na na absenan nila kada month na binabato!
+
+
+// Helper function to get all weekdays in a month
+function getWeekdaysInMonth($month_id) {
+    $startDate = new DateTime("$month_id-01");
+    $endDate = new DateTime($startDate->format('Y-m-t')); // Last day of the month
+    $weekdays = [];
+
+    while ($startDate <= $endDate) {
+        // Add to weekdays if it's a weekday (Monday to Friday)
+        if (in_array($startDate->format('N'), [1, 2, 3, 4, 5])) {
+            $weekdays[] = $startDate->format('Y-m-d');
+        }
+        $startDate->modify('+1 day');
+    }
+    return $weekdays;
+}
+
+// Fetch all attendance data for the month
+$stmt = $this->db->prepare("
+    SELECT
+    p.profile_id AS user_id,
+    p.sex,
+    ar.date,
+    ar.status
+    FROM profiles p
+    LEFT JOIN attendance_records ar ON p.profile_id = ar.user_id
+    WHERE p.profile_id IN ($userIdsString) -- Filter for specific users
+    AND DATE_FORMAT(ar.date, '%Y-%m') = :month -- Filter by the specified month
+    ORDER BY ar.user_id, ar.date
+    ");
+$stmt->bindValue(':month', $month_id, PDO::PARAM_STR);
+$stmt->execute();
+$attendanceRecords = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get all weekdays in the month
+$weekdays = getWeekdaysInMonth($month_id);
+
+// Initialize the attendance data structure
+$userAttendanceData = [];
+foreach (explode(',', $userIdsString) as $userId) {
+    $userAttendanceData[$userId] = [
+        'user_id' => $userId,
+        'sex' => null, // This will be populated from attendance records
+        'attendance' => [
+            'present' => [],
+            'absent' => [],
+        ],
+    ];
+}
+
+// Process attendance records
+foreach ($attendanceRecords as $record) {
+    $userId = $record['user_id'];
+    $date = $record['date'];
+    $status = $record['status'];
+    $sex = $record['sex'];
+
+    // Skip if the user is not in the list
+    if (!isset($userAttendanceData[$userId])) {
+        continue;
+    }
+
+    // Set gender if not already set
+    if (is_null($userAttendanceData[$userId]['sex'])) {
+        $userAttendanceData[$userId]['sex'] = $sex;
+    }
+
+    // Record presence or absence
+    if ($status === 'P') {
+        $userAttendanceData[$userId]['attendance']['present'][] = $date;
+    } elseif (in_array($status, ['A', 'E'])) {
+        $userAttendanceData[$userId]['attendance']['absent'][] = $date;
+    }
+}
+
+// Ensure all weekdays are accounted for (marking absent if no record exists)
+foreach ($userAttendanceData as $userId => &$data) {
+    foreach ($weekdays as $date) {
+        if (!in_array($date, $data['attendance']['present']) && !in_array($date, $data['attendance']['absent'])) {
+            $data['attendance']['absent'][] = $date;
+        }
+    }
+}
+
+// Count students with 5 consecutive absences
+$totalMalesWith5ConsecutiveAbsences = 0;
+$totalFemalesWith5ConsecutiveAbsences = 0;
+
+foreach ($userAttendanceData as $data) {
+    $absentDates = $data['attendance']['absent'];
+    sort($absentDates); // Ensure dates are in chronological order
+    $consecutiveCount = 0;
+
+    foreach ($absentDates as $index => $date) {
+        if ($index > 0 && (strtotime($date) - strtotime($absentDates[$index - 1]) === 86400)) {
+            $consecutiveCount++;
+            if ($consecutiveCount >= 4) { // Total 5 consecutive days including the current one
+                if ($data['sex'] === 'M') {
+                    $totalMalesWith5ConsecutiveAbsences++;
+                } elseif ($data['sex'] === 'F') {
+                    $totalFemalesWith5ConsecutiveAbsences++;
+                }
+                break;
+            }
+        } else {
+            $consecutiveCount = 0; // Reset count if not consecutive
+        }
+    }
+}
+
+
+#
+
+
+#echo '<pre>'.var_export($userAttendanceData, true).'</pre>';
+} catch (Exception $e) {
+   echo $e->getMessage();
+   return; 
+}
+echo '
+<table>
+<thead>
+<tr>
+<th rowspan="2">Month of<br>'.DateTime::createFromFormat('Y-m', $month_id)->format('F Y').'</th>
+
+<th rowspan="2">No. of Days of Classes</th>
+<th colspan="3" class="summary">Summary</th>
+</tr>
+<tr>
+<th>M</th>
+<th>F</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody>
+<!-- Enrolment as of (1st Friday of June) -->
+<tr>
+<td colspan="2" style="text-align: left;">Enrolment as of (1st Friday of June)</td>
+<td>' . $enrollie1stofjuneM . '</td>
+<td>' . $enrollie1stofjuneF . '</td> 
+<td>' . $enrollie1stofjuneT. '</td> 
+</tr>
+<!-- Late Enrollment during the month (beyond cut-off) -->
+<tr>
+<td colspan="2" style="text-align: left;">Late Enrollment during the month (beyond cut-off)</td>
+<td>' . $enrolliepassofjuneM . '</td>
+<td>' . $enrolliepassofjuneF . '</td> 
+<td>' . $enrolliepassofjuneT. '</td> 
+</tr>
+<!-- Registered Learners as of end of the month -->
+<tr>
+<td colspan="2" style="text-align: left;">Registered Learners as of end of the month</td>
+<td>' . $totalMales . '</td>
+<td>' . $totalFemales . '</td> 
+<td>' . $total . '</td> 
+</tr>
+<!-- Percentage of Enrolment as of end of the month -->
+<tr>
+<td colspan="2" style="text-align: left;">Percentage of Enrolment as of end of the month</td>
+<td>'.$poeM.'%</td>
+<td>'.$poeF.'%</td>
+<td>'.$poeT.'%</td>
+</tr>
+<!-- Average Daily Attendance -->
+<tr>
+<td colspan="2" style="text-align: left;">Average Daily Attendance</td>
+<td>'.$adaM.'</td>
+<td>'.$adaF.'</td> 
+<td>'.$adaT.'</td> 
+</tr>
+<!-- Percentage of Attendance for the month -->
+<tr>
+<td colspan="2" style="text-align: left;">Percentage of Attendance for the month</td>
+<td>'.$paM.'%</td>
+<td>'.$paF.'%</td> 
+<td>'.$paT.'%</td> 
+
+</tr>
+<!-- Number of students absent for 5 consecutive days -->
+<tr>
+<td colspan="2" style="text-align: left;">Number of students absent for 5 consecutive days</td>
+<td>'.$totalMalesWith5ConsecutiveAbsences.'</td>
+<td>'.$totalFemalesWith5ConsecutiveAbsences.'</td> 
+<td>'.($totalFemalesWith5ConsecutiveAbsences + $totalMalesWith5ConsecutiveAbsences).'</td> 
+</tr>
+<!-- Drop out -->
+<tr>
+<td colspan="2" style="text-align: left;">Drop out</td>
+<td></td>
+<td></td> 
+<td></td> 
+</tr>
+<!-- Transferred out -->
+<tr>
+<td colspan="2" style="text-align: left;">Transferred out</td>
+<td></td>
+<td></td> 
+<td></td> 
+</tr>
+<!-- Transferred in -->
+<tr>
+<td colspan="2" style="text-align: left;">Transferred in</td>
+<td></td>
+<td></td> 
+<td></td> 
+</tr>
+</tbody>
+</table>';
+}
+
+public function getAvailableDate() {
+    // Query the database to get all unique months and years in MM-YYYY format
+    $stmt = $this->db->prepare("
+        SELECT 
+        DATE_FORMAT(date, '%Y-%m') AS month_id,
+        CONCAT(MONTHNAME(date), ' ', YEAR(date)) AS date
+        FROM attendance_records
+        GROUP BY month_id
+        ORDER BY date ASC
+        ");
+    $stmt->execute();
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Return the result in JSON format
+    echo json_encode($result);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public function show() {
+
+ $adviserId = $_SESSION['user_id'];
+ try {
+    $result = $this->getAdviserSectionAndGrade($adviserId);
+    $_SESSION['section_id'] = $result['section_id'];
+    $stmt = $this->db->prepare("
+        SELECT 
+        s.id as section_id, 
+        s.section_name, 
+        s.daytime, 
+        COALESCE(p.lrn, 'No Data') AS lrn, 
+        CONCAT(
+            COALESCE(p.last_name, ''), ', ',
+            COALESCE(p.first_name, ''), ' ',
+            COALESCE(
+                CASE
+                WHEN p.middle_name IS NOT NULL AND p.middle_name != '' 
+                THEN CONCAT(SUBSTRING(p.middle_name, 1, 1), '.')
+                ELSE ''
+                END, 
+                '') 
+            ) AS fullname,
+        p.profile_id, 
+        p.sex
+        FROM sections s
+        LEFT JOIN enrollment_history eh ON eh.section_id = s.id
+        LEFT JOIN profiles p ON eh.user_id = p.profile_id
+        WHERE s.adviser_id = :adviser_id
+        ");
+    $stmt->bindValue(':adviser_id', $adviserId, PDO::PARAM_INT);
+    $stmt->execute();
+    $advisoryClass = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+
+        // Query to get unenrolled students
+    $stmt = $this->db->prepare("
+        SELECT 
+        COALESCE(p.lrn, 'No Data') AS lrn, 
+        CONCAT(
+            COALESCE(p.last_name, ''), ', ',
+            COALESCE(p.first_name, ''), ' ',
+            COALESCE(
+                CASE
+                WHEN p.middle_name IS NOT NULL AND p.middle_name != '' 
+                THEN CONCAT(SUBSTRING(p.middle_name, 1, 1), '.')
+                ELSE ''
+                END, 
+                '') 
+            ) AS fullname,
+        u.user_id, 
+        p.sex as gender
+        FROM users u
+        LEFT JOIN profiles p ON u.user_id = p.profile_id
+        LEFT JOIN enrollment_history eh ON eh.user_id = u.user_id AND eh.academic_year_id = :acads
+        WHERE u.role_id = 3 AND eh.user_id IS NULL
+        ");
+    $stmt->bindValue(':acads', $this->acadsyear, PDO::PARAM_INT);
+    $stmt->execute();
+    $unenrolledStudents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+
+
+} catch (Exception $e) {
+    echo $e->getMessage();
+    return;
+}
+include 'views/adviser/advisoryClass.php';
 }
 public function enroll() {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -214,9 +929,9 @@ public function unenroll() {
             header("Location: /BlissES/myclass-list");
             exit();
         } else {
-         echo "Error: Unable to unenroll the student.";
-     }
- } else {
+           echo "Error: Unable to unenroll the student.";
+       }
+   } else {
     echo "Invalid request.";
 }
 }
@@ -303,7 +1018,7 @@ public function showAttendance(){
         LEFT JOIN profiles p ON eh.user_id = p.profile_id
         WHERE s.adviser_id = :adviser_id
         Order by p.sex ASC, p.last_name ASC;
-     
+
         ");
     $stmt->bindValue(':adviser_id', $adviserId, PDO::PARAM_INT);
     $stmt->execute();
@@ -420,11 +1135,11 @@ public function showClassRecord() {
 
 
 
-    $stmt = $this->db->prepare("SELECT function FROM campus_info WHERE id = 8");
-    $stmt->execute();
-    $campusInfoData = $stmt->fetch(PDO::FETCH_ASSOC);
-    $currentGrading = (int)$campusInfoData['function'];
-   
+        $stmt = $this->db->prepare("SELECT function FROM campus_info WHERE id = 8");
+        $stmt->execute();
+        $campusInfoData = $stmt->fetch(PDO::FETCH_ASSOC);
+        $currentGrading = (int)$campusInfoData['function'];
+
 
         // Fetch advisory class information
         $stmt = $this->db->prepare("
@@ -456,7 +1171,7 @@ public function showClassRecord() {
             WHERE 
             s.adviser_id = :adviser_id
             Order by p.last_name ASC
-        ");
+            ");
         $stmt->bindValue(':adviser_id', $adviserId, PDO::PARAM_INT);
         $stmt->execute();
         $advisoryClass = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -478,8 +1193,8 @@ public function showClassRecord() {
                 grade_level gl
                 WHERE 
                 gl.id = :grade_level
-            )) > 0
-        ");
+                )) > 0
+            ");
         $stmt->bindValue(':grade_level', $result['grade_level_id'], PDO::PARAM_INT);
         $stmt->execute();
         $allSubjectInGrade = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -493,21 +1208,21 @@ public function showClassRecord() {
         }
 
 // Fetch grades for students
-$gradesStmt = $this->db->prepare("
-    SELECT 
-        gr.user_id, 
-        gr.subject_id, 
-        gr.grade 
-    FROM 
-        grade_records gr
-    WHERE 
-        gr.user_id IN (" . implode(',', array_map('intval', $studentIds)) . ")
-        AND gr.subject_id IN (" . implode(',', array_map('intval', $subjectIds)) . ")
-        AND gr.grading_id = :grading_id
-");
-$gradesStmt->bindValue(':grading_id', $currentGrading, PDO::PARAM_INT); 
-$gradesStmt->execute();
-$grades = $gradesStmt->fetchAll(PDO::FETCH_ASSOC);
+        $gradesStmt = $this->db->prepare("
+            SELECT 
+            gr.user_id, 
+            gr.subject_id, 
+            gr.grade 
+            FROM 
+            grade_records gr
+            WHERE 
+            gr.user_id IN (" . implode(',', array_map('intval', $studentIds)) . ")
+            AND gr.subject_id IN (" . implode(',', array_map('intval', $subjectIds)) . ")
+            AND gr.grading_id = :grading_id
+            ");
+        $gradesStmt->bindValue(':grading_id', $currentGrading, PDO::PARAM_INT); 
+        $gradesStmt->execute();
+        $grades = $gradesStmt->fetchAll(PDO::FETCH_ASSOC);
 
 
 
