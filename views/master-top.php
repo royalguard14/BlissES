@@ -615,7 +615,7 @@ function startFetchingMessagesForChat(userId) {
   }
 });
 </script>
-<script src="assets/js/widget.js"></script>
+
   <!-- SweetAlert2 -->
   <script src="assets/plugins/sweetalert2/sweetalert2.min.js"></script>
 </body>
